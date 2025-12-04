@@ -27,16 +27,37 @@ const CalendarView = () => {
     const tileContent = ({ date, view }) => {
         if (view === 'month') {
             const dateStr = format(date, 'yyyy-MM-dd');
-            const hasTransactions = transactions.some(t => t.date === dateStr);
+            const dailyTransactions = transactions.filter(t => t.date === dateStr);
 
-            if (hasTransactions) {
-                const dailyBalance = transactions
-                    .filter(t => t.date === dateStr)
-                    .reduce((acc, curr) => curr.type === 'income' ? acc + curr.amount : acc - curr.amount, 0);
+            if (dailyTransactions.length > 0) {
+                const income = dailyTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((acc, curr) => acc + curr.amount, 0);
+
+                const expense = dailyTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((acc, curr) => acc + curr.amount, 0);
+
+                const balance = income - expense;
 
                 return (
-                    <div className="flex justify-center mt-1">
-                        <div className={`w-2 h-2 rounded-full ${dailyBalance >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                    <div className="w-full px-1 mt-1 flex flex-col gap-0.5 text-[10px] font-medium">
+                        {income > 0 && (
+                            <div className="text-green-600 flex justify-between">
+                                <span>Ing:</span>
+                                <span>{income.toFixed(0)}</span>
+                            </div>
+                        )}
+                        {expense > 0 && (
+                            <div className="text-red-600 flex justify-between">
+                                <span>Gas:</span>
+                                <span>{expense.toFixed(0)}</span>
+                            </div>
+                        )}
+                        <div className={`border-t border-gray-100 mt-0.5 pt-0.5 flex justify-between font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                            <span>Bal:</span>
+                            <span>{balance.toFixed(0)}</span>
+                        </div>
                     </div>
                 );
             }
