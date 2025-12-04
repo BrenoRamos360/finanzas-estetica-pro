@@ -81,6 +81,27 @@ const FixedExpenses = () => {
         return transaction;
     };
 
+    // Helper to get last month's payment for reference
+    const getLastMonthPayment = (expense) => {
+        const current = parseISO(selectedMonth + '-01');
+        const prevDate = new Date(current.getFullYear(), current.getMonth() - 1, 1);
+        const prevYear = prevDate.getFullYear().toString();
+        const prevMonth = (prevDate.getMonth() + 1).toString().padStart(2, '0');
+
+        const transaction = transactions.find(t => {
+            const tDate = t.date;
+            const tYear = tDate.split('-')[0];
+            const tMonth = tDate.split('-')[1];
+
+            const isMatch = (t.fixedExpenseId === expense.id) ||
+                (!t.fixedExpenseId && t.description === expense.description); // Relaxed match for history
+
+            return isMatch && tYear === prevYear && tMonth === prevMonth;
+        });
+
+        return transaction ? transaction.amount : null;
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -159,6 +180,7 @@ const FixedExpenses = () => {
                     {fixedExpenses.map((expense) => {
                         const paidTransaction = getPaymentStatus(expense);
                         const isPaid = !!paidTransaction;
+                        const lastMonthAmount = getLastMonthPayment(expense);
 
                         return (
                             <div key={expense.id} className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${isPaid ? 'bg-green-50/30' : 'hover:bg-slate-50'}`}>
@@ -169,7 +191,14 @@ const FixedExpenses = () => {
                                     </div>
                                     <div>
                                         <p className="font-bold text-gray-900">{expense.description}</p>
-                                        <p className="text-xs text-slate-500">Valor Base: € {expense.amount.toFixed(2)}</p>
+                                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                                            <span>Base: € {expense.amount.toFixed(2)}</span>
+                                            {lastMonthAmount !== null && (
+                                                <span className="text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded">
+                                                    Mes anterior: € {lastMonthAmount.toFixed(2)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
