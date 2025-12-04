@@ -8,10 +8,23 @@ import DateRangePicker from '../components/Finance/DateRangePicker';
 const Transactions = () => {
     const { filteredTransactions, removeTransaction, editTransaction, dateRange } = useFinance();
     const [editingTransaction, setEditingTransaction] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [paymentFilter, setPaymentFilter] = useState('all');
+
+    // Filter logic
+    const displayedTransactions = filteredTransactions.filter(t => {
+        const matchesSearch =
+            (t.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (t.category?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        const matchesPayment = paymentFilter === 'all' || t.paymentMethod === paymentFilter;
+
+        return matchesSearch && matchesPayment;
+    });
 
     const handleExport = () => {
-        // Prepare data for export
-        const allData = filteredTransactions.map(t => ({
+        // Prepare data for export (using displayedTransactions to respect filters)
+        const allData = displayedTransactions.map(t => ({
             Fecha: t.date,
             Descripción: t.description,
             Categoría: t.category || 'Sin Categoría',
@@ -23,7 +36,7 @@ const Transactions = () => {
             'Gasto (€)': t.type === 'expense' ? t.amount : 0,
         }));
 
-        const incomeData = filteredTransactions
+        const incomeData = displayedTransactions
             .filter(t => t.type === 'income')
             .map(t => ({
                 Fecha: t.date,
@@ -34,7 +47,7 @@ const Transactions = () => {
                 Importe: t.amount
             }));
 
-        const expenseData = filteredTransactions
+        const expenseData = displayedTransactions
             .filter(t => t.type === 'expense')
             .map(t => ({
                 Fecha: t.date,
@@ -77,14 +90,40 @@ const Transactions = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                 <h2 className="text-2xl font-bold text-gray-800">Movimientos</h2>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col md:flex-row items-center gap-3">
+                    {/* Search Input */}
+                    <div className="relative w-full md:w-auto">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Buscar..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* Payment Filter */}
+                    <select
+                        value={paymentFilter}
+                        onChange={(e) => setPaymentFilter(e.target.value)}
+                        className="w-full md:w-auto px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                        <option value="all">Todos los Métodos</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Bizum">Bizum</option>
+                        <option value="Web">Web</option>
+                    </select>
+
                     <DateRangePicker />
 
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm whitespace-nowrap"
                     >
-                        <Download size={18} /> Exportar Excel
+                        <Download size={18} /> Exportar
                     </button>
                 </div>
             </div>
@@ -111,7 +150,7 @@ const Transactions = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredTransactions.map((transaction) => (
+                            {displayedTransactions.map((transaction) => (
                                 <tr key={transaction.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-6 py-4 text-sm text-slate-600 font-medium">{transaction.date}</td>
                                     <td className="px-6 py-4 text-sm text-slate-900 font-semibold">{transaction.description}</td>
@@ -177,7 +216,7 @@ const Transactions = () => {
                                             <div className="p-3 bg-slate-50 rounded-full">
                                                 <Filter size={24} className="text-slate-300" />
                                             </div>
-                                            <p>No hay movimientos en este periodo.</p>
+                                            <p>No hay movimientos que coincidan con tu búsqueda.</p>
                                         </div>
                                     </td>
                                 </tr>
