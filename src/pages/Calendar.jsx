@@ -44,28 +44,28 @@ const CalendarView = () => {
                 if (viewMode === 'none') {
                     return (
                         <div className="flex justify-center mt-2">
-                            <div className={`w-1.5 h-1.5 rounded-full ${balance >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                            <div className={`w-2 h-2 rounded-full ${balance >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                         </div>
                     );
                 }
 
                 return (
-                    <div className="w-full px-1 mt-1 flex flex-col gap-0.5 text-[10px] font-medium">
+                    <div className="w-full mt-2 flex flex-col gap-1">
                         {(viewMode === 'all' || viewMode === 'income') && income > 0 && (
-                            <div className="text-green-600 flex justify-between">
-                                <span>Ing:</span>
+                            <div className="flex items-center justify-between text-xs text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded">
+                                <ArrowUpCircle size={12} />
                                 <span>{income.toFixed(0)}</span>
                             </div>
                         )}
                         {(viewMode === 'all' || viewMode === 'expense') && expense > 0 && (
-                            <div className="text-red-600 flex justify-between">
-                                <span>Gas:</span>
+                            <div className="flex items-center justify-between text-xs text-red-600 font-medium bg-red-50 px-1.5 py-0.5 rounded">
+                                <ArrowDownCircle size={12} />
                                 <span>{expense.toFixed(0)}</span>
                             </div>
                         )}
                         {viewMode === 'all' && (
-                            <div className={`border-t border-gray-100 mt-0.5 pt-0.5 flex justify-between font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                                <span>Bal:</span>
+                            <div className={`flex items-center justify-between text-sm font-bold px-1.5 py-0.5 border-t border-gray-100 mt-1 pt-1 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                <span className="text-[10px] uppercase text-gray-400 font-normal">Bal</span>
                                 <span>{balance.toFixed(0)}</span>
                             </div>
                         )}
@@ -117,7 +117,7 @@ const CalendarView = () => {
             font-family: inherit;
           }
           .react-calendar__tile {
-            height: 100px;
+            height: 130px;
             display: flex;
             flex-direction: column;
             align-items: center;
