@@ -9,6 +9,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
     const [amount, setAmount] = useState(initialData?.amount || '');
     const [date, setDate] = useState(initialData?.date || initialDate || new Date().toLocaleDateString('en-CA')); // YYYY-MM-DD in local time
     const [category, setCategory] = useState(initialData?.category || '');
+    const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || 'Efectivo');
     const [status, setStatus] = useState(initialData?.status || 'paid');
 
     const handleSubmit = (e) => {
@@ -24,6 +25,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
             type,
             date,
             category,
+            paymentMethod,
             status
         };
 
@@ -38,6 +40,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
             setDescription('');
             setAmount('');
             setCategory('');
+            setPaymentMethod('Efectivo');
             setStatus('paid');
         }
 
@@ -107,6 +110,20 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
                         placeholder="0,00"
                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                    <select
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Bizum">Bizum</option>
+                        <option value="Web">Web</option>
+                    </select>
                 </div>
                 <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>

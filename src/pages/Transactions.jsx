@@ -15,6 +15,7 @@ const Transactions = () => {
             Fecha: t.date,
             Descripción: t.description,
             Categoría: t.category || 'Sin Categoría',
+            'Método de Pago': t.paymentMethod || 'Efectivo',
             Tipo: t.type === 'income' ? 'Ingreso' : 'Gasto',
             Estado: t.status === 'pending' ? 'Pendiente' : 'Pagado',
             Importe: t.amount,
@@ -28,6 +29,7 @@ const Transactions = () => {
                 Fecha: t.date,
                 Descripción: t.description,
                 Categoría: t.category || 'Sin Categoría',
+                'Método de Pago': t.paymentMethod || 'Efectivo',
                 Estado: t.status === 'pending' ? 'Pendiente' : 'Pagado',
                 Importe: t.amount
             }));
@@ -38,6 +40,7 @@ const Transactions = () => {
                 Fecha: t.date,
                 Descripción: t.description,
                 Categoría: t.category || 'Sin Categoría',
+                'Método de Pago': t.paymentMethod || 'Efectivo',
                 Estado: t.status === 'pending' ? 'Pendiente' : 'Pagado',
                 Importe: t.amount
             }));
@@ -100,6 +103,7 @@ const Transactions = () => {
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Fecha</th>
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Descripción</th>
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Categoría</th>
+                                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Método</th>
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Tipo</th>
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
                                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Valor</th>
@@ -115,6 +119,9 @@ const Transactions = () => {
                                         <span className="px-2 py-1 bg-slate-100 rounded-md text-xs font-medium text-slate-600">
                                             {transaction.category || 'Sin Categoría'}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-slate-600">
+                                        {transaction.paymentMethod || 'Efectivo'}
                                     </td>
                                     <td className="px-6 py-4">
                                         {transaction.type === 'income' ? (
