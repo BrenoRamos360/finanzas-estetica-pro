@@ -62,11 +62,15 @@ const FixedExpenses = () => {
 
     // Helper to check if expense is paid in selected month
     const getPaymentStatus = (expense) => {
+        if (!transactions) return null;
+
         const year = selectedMonth.split('-')[0];
         const month = selectedMonth.split('-')[1];
 
         // Find transaction linked to this expense in this month
         const transaction = transactions.find(t => {
+            if (!t.date) return false; // Safety check for missing date
+
             const tDate = t.date; // YYYY-MM-DD
             const tYear = tDate.split('-')[0];
             const tMonth = tDate.split('-')[1];
@@ -83,12 +87,16 @@ const FixedExpenses = () => {
 
     // Helper to get last month's payment for reference
     const getLastMonthPayment = (expense) => {
+        if (!transactions) return null;
+
         const current = parseISO(selectedMonth + '-01');
         const prevDate = new Date(current.getFullYear(), current.getMonth() - 1, 1);
         const prevYear = prevDate.getFullYear().toString();
         const prevMonth = (prevDate.getMonth() + 1).toString().padStart(2, '0');
 
         const transaction = transactions.find(t => {
+            if (!t.date) return false; // Safety check for missing date
+
             const tDate = t.date;
             const tYear = tDate.split('-')[0];
             const tMonth = tDate.split('-')[1];
