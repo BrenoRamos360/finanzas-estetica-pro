@@ -152,7 +152,7 @@ export const FinanceProvider = ({ children }) => {
             amount: parseFloat(actualAmount),
             type: 'expense',
             date: date,
-            category: 'Fijos',
+            category: expense.category || 'Fijos', // Use the expense category or default to 'Fijos'
             status: 'paid', // Usually fixed expenses are paid immediately when processed
             paymentMethod: 'Efectivo', // Default, can be changed later if needed
             fixedExpenseId: expense.id // Link to the fixed expense definition
