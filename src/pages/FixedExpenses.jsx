@@ -1,62 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { Trash2, Plus, CheckCircle, Calendar, AlertCircle } from 'lucide-react';
+import { Trash2, Plus, CheckCircle, Calendar, AlertCircle, Edit2, Save, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const FixedExpenses = () => {
-    const { fixedExpenses, addFixedExpense, removeFixedExpense, processFixedExpense, transactions, removeTransaction } = useFinance();
+    const { fixedExpenses, addFixedExpense, removeFixedExpense, updateFixedExpense, processFixedExpense, transactions, removeTransaction } = useFinance();
 
     // Form State
     const [description, setDescription] = useState('');
     const [amount, setAmount] = useState('');
     const [day, setDay] = useState('');
+    const [editingId, setEditingId] = useState(null); // ID of expense being edited
 
     // Month Selection State
     const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
-    // Local state for editing amounts before confirmation
-    const [editAmounts, setEditAmounts] = useState({});
+    // Local state for editing amounts and dates before confirmation
+    const [confirmValues, setConfirmValues] = useState({});
 
-    // Initialize edit amounts when fixed expenses change
+    // Initialize confirm values when fixed expenses change or month changes
     useEffect(() => {
-        const initialAmounts = {};
+        const initialValues = {};
         fixedExpenses.forEach(exp => {
-            initialAmounts[exp.id] = exp.amount;
+            // Default Date: Selected Month + (Day or 01)
+            const defaultDay = exp.day ? exp.day.toString().padStart(2, '0') : '01';
+            const defaultDate = `${selectedMonth}-${defaultDay}`;
+
+            initialValues[exp.id] = {
+                amount: exp.amount,
+                date: defaultDate
+            };
         });
-        setEditAmounts(prev => ({ ...initialAmounts, ...prev }));
-    }, [fixedExpenses]);
+        setConfirmValues(prev => ({ ...initialValues, ...prev }));
+    }, [fixedExpenses, selectedMonth]);
 
-    const handleAddExpense = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        if (!description || !amount || !day) return;
+        if (!description || !amount) return;
 
-        addFixedExpense({
+        const expenseData = {
             description,
             amount: parseFloat(amount),
-            day: parseInt(day),
-        });
+            day: day ? parseInt(day) : null,
+        };
+
+        if (editingId) {
+            updateFixedExpense(editingId, expenseData);
+            setEditingId(null);
+        } else {
+            addFixedExpense(expenseData);
+        }
 
         setDescription('');
         setAmount('');
         setDay('');
     };
 
-    const handleProcess = (expense) => {
-        const actualAmount = editAmounts[expense.id] || expense.amount;
-        // Construct date: Selected Month + Expense Day
-        const year = selectedMonth.split('-')[0];
-        const month = selectedMonth.split('-')[1];
-        // Ensure day is valid (e.g., not Feb 30)
-        const date = `${year}-${month}-${expense.day.toString().padStart(2, '0')}`;
-
-        processFixedExpense(expense, actualAmount, date);
+    const handleEditClick = (expense) => {
+        setDescription(expense.description);
+        setAmount(expense.amount);
+        setDay(expense.day || '');
+        setEditingId(expense.id);
     };
 
-    const handleAmountChange = (id, value) => {
-        setEditAmounts(prev => ({
+    const handleCancelEdit = () => {
+        setDescription('');
+        setAmount('');
+        setDay('');
+        setEditingId(null);
+    };
+
+    const handleProcess = (expense) => {
+        const values = confirmValues[expense.id] || { amount: expense.amount, date: `${selectedMonth}-01` };
+        processFixedExpense(expense, values.amount, values.date);
+    };
+
+    const handleConfirmValueChange = (id, field, value) => {
+        setConfirmValues(prev => ({
             ...prev,
-            [id]: value
+            [id]: {
+                ...prev[id],
+                [field]: value
+            }
         }));
     };
 
@@ -127,11 +153,11 @@ const FixedExpenses = () => {
                 </div>
             </div>
 
-            {/* Add New Expense Form */}
-            <form onSubmit={handleAddExpense} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                    <Plus size={20} className="text-blue-600" />
-                    Configurar Nuevo Gasto Fijo
+            {/* Add/Edit Expense Form */}
+            <form onSubmit={handleSubmit} className={`p-6 rounded-xl shadow-sm border transition-colors ${editingId ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`}>
+                <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${editingId ? 'text-blue-800' : 'text-gray-800'}`}>
+                    {editingId ? <Edit2 size={20} /> : <Plus size={20} className="text-blue-600" />}
+                    {editingId ? 'Editar Gasto Fijo' : 'Configurar Nuevo Gasto Fijo'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div className="md:col-span-2">
@@ -155,24 +181,35 @@ const FixedExpenses = () => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Día de Pago</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Día de Pago (Opcional)</label>
                         <input
                             type="number"
                             min="1"
                             max="31"
                             value={day}
                             onChange={(e) => setDay(e.target.value)}
-                            placeholder="1-31"
+                            placeholder="Ej: 5"
                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                 </div>
-                <button
-                    type="submit"
-                    className="mt-4 w-full bg-slate-900 text-white py-2 px-6 rounded-lg font-medium hover:bg-slate-800 transition-colors"
-                >
-                    Guardar Configuración
-                </button>
+                <div className="flex gap-2 mt-4">
+                    <button
+                        type="submit"
+                        className={`flex-1 py-2 px-6 rounded-lg font-medium transition-colors ${editingId ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'}`}
+                    >
+                        {editingId ? 'Actualizar Gasto' : 'Guardar Configuración'}
+                    </button>
+                    {editingId && (
+                        <button
+                            type="button"
+                            onClick={handleCancelEdit}
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    )}
+                </div>
             </form>
 
             {/* Monthly Status List */}
@@ -189,13 +226,14 @@ const FixedExpenses = () => {
                         const paidTransaction = getPaymentStatus(expense);
                         const isPaid = !!paidTransaction;
                         const lastMonthAmount = getLastMonthPayment(expense);
+                        const confirmData = confirmValues[expense.id] || { amount: expense.amount, date: '' };
 
                         return (
-                            <div key={expense.id} className={`p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors ${isPaid ? 'bg-green-50/30' : 'hover:bg-slate-50'}`}>
+                            <div key={expense.id} className={`p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors ${isPaid ? 'bg-green-50/30' : 'hover:bg-slate-50'}`}>
                                 {/* Expense Info */}
                                 <div className="flex items-center gap-4 flex-1">
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${isPaid ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'}`}>
-                                        {expense.day}
+                                        {expense.day || '?'}
                                     </div>
                                     <div>
                                         <p className="font-bold text-gray-900">{expense.description}</p>
@@ -211,12 +249,15 @@ const FixedExpenses = () => {
                                 </div>
 
                                 {/* Action Area */}
-                                <div className="flex items-center gap-4">
+                                <div className="flex flex-col sm:flex-row items-center gap-4">
                                     {isPaid ? (
                                         <div className="flex items-center gap-4">
                                             <div className="text-right">
                                                 <span className="block text-xs font-bold text-green-600 uppercase tracking-wider">Pagado</span>
-                                                <span className="font-bold text-gray-900 text-lg">€ {paidTransaction.amount.toFixed(2)}</span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="font-bold text-gray-900 text-lg">€ {paidTransaction.amount.toFixed(2)}</span>
+                                                    <span className="text-xs text-slate-400">{format(parseISO(paidTransaction.date), 'd MMM', { locale: es })}</span>
+                                                </div>
                                             </div>
                                             <button
                                                 onClick={() => {
@@ -231,14 +272,23 @@ const FixedExpenses = () => {
                                             </button>
                                         </div>
                                     ) : (
-                                        <div className="flex items-center gap-3 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                        <div className="flex items-center gap-2 bg-white p-1.5 rounded-xl border border-slate-200 shadow-sm">
+                                            <div className="flex flex-col px-2 border-r border-slate-100">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Fecha</label>
+                                                <input
+                                                    type="date"
+                                                    value={confirmData.date}
+                                                    onChange={(e) => handleConfirmValueChange(expense.id, 'date', e.target.value)}
+                                                    className="w-28 text-xs font-medium text-gray-700 focus:outline-none bg-transparent"
+                                                />
+                                            </div>
                                             <div className="flex flex-col px-2">
-                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Confirmar Valor</label>
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase">Valor</label>
                                                 <input
                                                     type="number"
-                                                    value={editAmounts[expense.id] ?? expense.amount}
-                                                    onChange={(e) => handleAmountChange(expense.id, e.target.value)}
-                                                    className="w-24 font-bold text-gray-900 focus:outline-none border-b border-transparent focus:border-blue-500 transition-colors"
+                                                    value={confirmData.amount}
+                                                    onChange={(e) => handleConfirmValueChange(expense.id, 'amount', e.target.value)}
+                                                    className="w-20 font-bold text-gray-900 focus:outline-none border-b border-transparent focus:border-blue-500 transition-colors"
                                                 />
                                             </div>
                                             <button
@@ -251,21 +301,28 @@ const FixedExpenses = () => {
                                         </div>
                                     )}
 
-                                    {/* Delete Config Button (Only if not paid to avoid confusion, or always?) 
-                                        Let's keep it separate to avoid accidental deletion of the config 
-                                    */}
+                                    {/* Edit/Delete Actions */}
                                     {!isPaid && (
-                                        <button
-                                            onClick={() => {
-                                                if (window.confirm('¿Eliminar esta configuración de gasto fijo?')) {
-                                                    removeFixedExpense(expense.id);
-                                                }
-                                            }}
-                                            className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                                            title="Eliminar configuración"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => handleEditClick(expense)}
+                                                className="p-2 text-slate-300 hover:text-blue-500 transition-colors"
+                                                title="Editar configuración"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (window.confirm('¿Eliminar esta configuración de gasto fijo?')) {
+                                                        removeFixedExpense(expense.id);
+                                                    }
+                                                }}
+                                                className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                                title="Eliminar configuración"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     )}
                                 </div>
                             </div>

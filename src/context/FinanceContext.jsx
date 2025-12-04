@@ -111,6 +111,15 @@ export const FinanceProvider = ({ children }) => {
         }
     };
 
+    const updateFixedExpense = async (id, updatedExpense) => {
+        if (!user) return;
+        try {
+            await updateDoc(doc(db, 'fixedExpenses', id), updatedExpense);
+        } catch (e) {
+            console.error("Error updating fixed expense: ", e);
+        }
+    };
+
     const addCategory = (type, category) => {
         // Local state only for now, or implement Firestore sync if critical
         setCategories(prev => ({
@@ -230,6 +239,7 @@ export const FinanceProvider = ({ children }) => {
             fixedExpenses,
             addFixedExpense,
             removeFixedExpense,
+            updateFixedExpense,
             processFixedExpense,
             editTransaction,
             // Global
