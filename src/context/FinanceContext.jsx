@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { db } from '../firebase';
+import {
+    collection,
+    addDoc,
+    deleteDoc,
+    updateDoc,
+    doc,
+    query,
+    where,
+    onSnapshot
+} from 'firebase/firestore';
 
 const FinanceContext = createContext();
 
@@ -9,7 +20,6 @@ export const FinanceProvider = ({ children }) => {
     const { user } = useAuth();
 
     // Initialize state with empty arrays or default values
-    // We will load the actual user data in a useEffect when 'user' changes
     const [transactions, setTransactions] = useState([]);
     const [fixedExpenses, setFixedExpenses] = useState([]);
 
@@ -21,32 +31,33 @@ export const FinanceProvider = ({ children }) => {
 
     const [categories, setCategories] = useState(defaultCategories);
 
-    // Load data when user changes
+    // Load data when user changes (Real-time Sync)
     useEffect(() => {
         if (user) {
-            const userTransactions = localStorage.getItem(`transactions_${user.id}`);
-            const userFixedExpenses = localStorage.getItem(`fixedExpenses_${user.id}`);
-            const userCategories = localStorage.getItem(`categories_${user.id}`);
+            // Transactions Listener
+            const qTransactions = query(collection(db, 'transactions'), where('userId', '==', user.id));
+            const unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
+                const transData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Sort by date descending (optional, but good for UI)
+                transData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                setTransactions(transData);
+            });
 
-            if (userTransactions) {
-                setTransactions(JSON.parse(userTransactions));
-            } else {
-                // Default data for new users? Or empty? Let's give them empty for now, or the demo data if it's a demo user.
-                // Let's start fresh for new users to avoid confusion.
-                setTransactions([]);
-            }
+            // Fixed Expenses Listener
+            const qFixed = query(collection(db, 'fixedExpenses'), where('userId', '==', user.id));
+            const unsubscribeFixed = onSnapshot(qFixed, (snapshot) => {
+                const fixedData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setFixedExpenses(fixedData);
+            });
 
-            if (userFixedExpenses) {
-                setFixedExpenses(JSON.parse(userFixedExpenses));
-            } else {
-                setFixedExpenses([]);
-            }
+            // Categories Listener (Optional: if we want custom categories per user)
+            // For now, we'll keep categories local/default or implement basic sync later if needed.
+            // Let's stick to default for simplicity unless requested.
 
-            if (userCategories) {
-                setCategories(JSON.parse(userCategories));
-            } else {
-                setCategories(defaultCategories);
-            }
+            return () => {
+                unsubscribeTransactions();
+                unsubscribeFixed();
+            };
         } else {
             // Clear data on logout
             setTransactions([]);
@@ -55,42 +66,53 @@ export const FinanceProvider = ({ children }) => {
         }
     }, [user]);
 
-    // Save data when it changes (only if user is logged in)
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem(`transactions_${user.id}`, JSON.stringify(transactions));
-        }
-    }, [transactions, user]);
+    // We don't need useEffect to SAVE data anymore, we do it directly in the functions.
 
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem(`fixedExpenses_${user.id}`, JSON.stringify(fixedExpenses));
+    const addTransaction = async (transaction) => {
+        if (!user) return;
+        try {
+            await addDoc(collection(db, 'transactions'), {
+                ...transaction,
+                userId: user.id,
+                createdAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Error adding transaction: ", e);
         }
-    }, [fixedExpenses, user]);
-
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem(`categories_${user.id}`, JSON.stringify(categories));
-        }
-    }, [categories, user]);
-
-    const addTransaction = (transaction) => {
-        setTransactions(prev => [{ ...transaction, id: Date.now(), status: transaction.status || 'paid' }, ...prev]);
     };
 
-    const removeTransaction = (id) => {
-        setTransactions(prev => prev.filter(t => t.id !== id));
+    const removeTransaction = async (id) => {
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, 'transactions', id));
+        } catch (e) {
+            console.error("Error deleting transaction: ", e);
+        }
     };
 
-    const addFixedExpense = (expense) => {
-        setFixedExpenses(prev => [{ ...expense, id: Date.now() }, ...prev]);
+    const addFixedExpense = async (expense) => {
+        if (!user) return;
+        try {
+            await addDoc(collection(db, 'fixedExpenses'), {
+                ...expense,
+                userId: user.id
+            });
+        } catch (e) {
+            console.error("Error adding fixed expense: ", e);
+        }
     };
 
-    const removeFixedExpense = (id) => {
-        setFixedExpenses(prev => prev.filter(e => e.id !== id));
+    const removeFixedExpense = async (id) => {
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, 'fixedExpenses', id));
+        } catch (e) {
+            console.error("Error deleting fixed expense: ", e);
+        }
     };
 
     const addCategory = (type, category) => {
+        // Local state only for now, or implement Firestore sync if critical
         setCategories(prev => ({
             ...prev,
             [type]: [...prev[type], category]
@@ -98,14 +120,21 @@ export const FinanceProvider = ({ children }) => {
     };
 
     const removeCategory = (type, category) => {
+        // Local state only for now
         setCategories(prev => ({
             ...prev,
             [type]: prev[type].filter(c => c !== category)
         }));
     };
 
-    const editTransaction = (updatedTransaction) => {
-        setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+    const editTransaction = async (updatedTransaction) => {
+        if (!user) return;
+        try {
+            const { id, ...data } = updatedTransaction;
+            await updateDoc(doc(db, 'transactions', id), data);
+        } catch (e) {
+            console.error("Error updating transaction: ", e);
+        }
     };
 
     const processFixedExpense = (expense) => {

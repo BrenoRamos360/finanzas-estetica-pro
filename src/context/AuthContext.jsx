@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth } from '../firebase';
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged,
+    updateProfile
+} from 'firebase/auth';
 
 const AuthContext = createContext();
 
@@ -9,61 +17,54 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for saved user session
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser) {
+                // Map Firebase user to our app's user structure
+                setUser({
+                    id: currentUser.uid,
+                    name: currentUser.displayName || currentUser.email.split('@')[0],
+                    email: currentUser.email
+                });
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+
+        return unsubscribe;
     }, []);
 
-    const login = (username, password) => {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (!username || !password) {
-                    reject('Usuario y contraseña requeridos');
-                    return;
+    const login = async (username, password) => {
+        // We need an email for Firebase. Since we used "username" before,
+        // we'll construct a fake email if it's not one, or ask user to migrate.
+        // For simplicity/speed, let's assume username is email or append a domain.
+        // BETTER: Let's assume the input IS the email for now, or append @app.com
+
+        const email = username.includes('@') ? username : `${username}@finanzas.pro`;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            // If user not found, try to register automatically (legacy behavior support)
+            // OR return error. Let's try to register if it's a "user-not-found" to keep the "easy entry" feel
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                // Try to create account
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await updateProfile(userCredential.user, {
+                        displayName: username
+                    });
+                } catch (createError) {
+                    throw createError;
                 }
-
-                const cleanUsername = username.trim();
-                const userId = cleanUsername.toLowerCase().replace(/\s+/g, '_');
-
-                // Get existing users database
-                const usersDb = JSON.parse(localStorage.getItem('users_db') || '{}');
-
-                if (usersDb[userId]) {
-                    // User exists, check password
-                    if (usersDb[userId].password === password) {
-                        const user = usersDb[userId];
-                        localStorage.setItem('currentUser', JSON.stringify(user));
-                        setUser(user);
-                        resolve(user);
-                    } else {
-                        reject('Contraseña incorrecta');
-                    }
-                } else {
-                    // New user, register them
-                    const newUser = {
-                        id: userId,
-                        name: cleanUsername,
-                        email: `${userId}@example.com`,
-                        password: password // In a real app, never store plain passwords!
-                    };
-
-                    usersDb[userId] = newUser;
-                    localStorage.setItem('users_db', JSON.stringify(usersDb));
-
-                    localStorage.setItem('currentUser', JSON.stringify(newUser));
-                    setUser(newUser);
-                    resolve(newUser);
-                }
-            }, 500);
-        });
+            } else {
+                throw error;
+            }
+        }
     };
 
     const logout = () => {
-        localStorage.removeItem('currentUser');
-        setUser(null);
+        return signOut(auth);
     };
 
     return (
