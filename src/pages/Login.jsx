@@ -20,7 +20,18 @@ const Login = () => {
             await login(username, password);
             navigate('/');
         } catch (err) {
-            setError(typeof err === 'string' ? err : 'Error al iniciar sesión. Inténtalo de nuevo.');
+            console.error(err);
+            let errorMessage = 'Error al iniciar sesión.';
+            if (err.code === 'auth/weak-password') {
+                errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+            } else if (err.code === 'auth/invalid-email') {
+                errorMessage = 'El correo electrónico no es válido.';
+            } else if (err.code === 'auth/operation-not-allowed') {
+                errorMessage = 'El inicio de sesión con correo/contraseña no está habilitado en Firebase.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
