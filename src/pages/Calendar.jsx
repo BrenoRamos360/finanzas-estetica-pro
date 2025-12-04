@@ -3,7 +3,7 @@ import Calendar from 'react-calendar';
 import { useFinance } from '../context/FinanceContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowUpCircle, ArrowDownCircle, X, Plus } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, X, Plus, Eye, EyeOff, TrendingUp, TrendingDown, LayoutGrid } from 'lucide-react';
 import TransactionForm from '../components/Finance/TransactionForm';
 import 'react-calendar/dist/Calendar.css';
 
@@ -12,6 +12,7 @@ const CalendarView = () => {
     const [date, setDate] = useState(new Date());
     const [showModal, setShowModal] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [viewMode, setViewMode] = useState('all'); // 'all', 'income', 'expense', 'none'
 
     const onChange = (newDate) => {
         setDate(newDate);
@@ -40,24 +41,34 @@ const CalendarView = () => {
 
                 const balance = income - expense;
 
+                if (viewMode === 'none') {
+                    return (
+                        <div className="flex justify-center mt-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${balance >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        </div>
+                    );
+                }
+
                 return (
                     <div className="w-full px-1 mt-1 flex flex-col gap-0.5 text-[10px] font-medium">
-                        {income > 0 && (
+                        {(viewMode === 'all' || viewMode === 'income') && income > 0 && (
                             <div className="text-green-600 flex justify-between">
                                 <span>Ing:</span>
                                 <span>{income.toFixed(0)}</span>
                             </div>
                         )}
-                        {expense > 0 && (
+                        {(viewMode === 'all' || viewMode === 'expense') && expense > 0 && (
                             <div className="text-red-600 flex justify-between">
                                 <span>Gas:</span>
                                 <span>{expense.toFixed(0)}</span>
                             </div>
                         )}
-                        <div className={`border-t border-gray-100 mt-0.5 pt-0.5 flex justify-between font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                            <span>Bal:</span>
-                            <span>{balance.toFixed(0)}</span>
-                        </div>
+                        {viewMode === 'all' && (
+                            <div className={`border-t border-gray-100 mt-0.5 pt-0.5 flex justify-between font-bold ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                <span>Bal:</span>
+                                <span>{balance.toFixed(0)}</span>
+                            </div>
+                        )}
                     </div>
                 );
             }
@@ -66,7 +77,37 @@ const CalendarView = () => {
 
     return (
         <div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Calendario Financiero</h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Calendario Financiero</h2>
+
+                {/* View Mode Selector */}
+                <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+                    <button
+                        onClick={() => setViewMode('all')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'all' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <LayoutGrid size={16} /> Todo
+                    </button>
+                    <button
+                        onClick={() => setViewMode('income')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'income' ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <TrendingUp size={16} /> Entradas
+                    </button>
+                    <button
+                        onClick={() => setViewMode('expense')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'expense' ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <TrendingDown size={16} /> Salidas
+                    </button>
+                    <button
+                        onClick={() => setViewMode('none')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'none' ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <EyeOff size={16} /> Limpio
+                    </button>
+                </div>
+            </div>
 
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <style>{`
