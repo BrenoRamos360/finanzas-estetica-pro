@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const Comparisons = () => {
@@ -182,11 +182,5 @@ const Comparisons = () => {
         </div>
     );
 };
-
-function subMonths(date, amount) {
-    const d = new Date(date);
-    d.setMonth(d.getMonth() - amount);
-    return d;
-}
 
 export default Comparisons;

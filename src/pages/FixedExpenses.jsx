@@ -198,7 +198,7 @@ const FixedExpenses = () => {
                             className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
                             <option value="">Seleccionar...</option>
-                            {categories.expense.map(cat => (
+                            {categories?.expense?.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
                             ))}
                         </select>
