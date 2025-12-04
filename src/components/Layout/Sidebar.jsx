@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Wallet, Calendar, FileText, LogOut, Settings, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Wallet, Calendar, FileText, LogOut, Settings, BarChart3, ArrowLeftRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -13,6 +13,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { icon: Calendar, label: 'Calendario', path: '/calendario' },
         { icon: FileText, label: 'Gastos Fijos', path: '/gastos-fixos' },
         { icon: BarChart3, label: 'Reportes', path: '/reportes' },
+        { icon: ArrowLeftRight, label: 'Comparativas', path: '/comparativas' },
         { icon: Settings, label: 'Configuración', path: '/configuracion' },
     ];
 

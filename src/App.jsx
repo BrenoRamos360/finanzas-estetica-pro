@@ -10,6 +10,7 @@ import FixedExpenses from './pages/FixedExpenses';
 import Login from './pages/Login';
 import Settings from './pages/Settings';
 import Analytics from './pages/Analytics';
+import Comparisons from './pages/Comparisons';
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -35,6 +36,7 @@ function App() {
                 <Route path="calendario" element={<CalendarView />} />
                 <Route path="gastos-fixos" element={<FixedExpenses />} />
                 <Route path="reportes" element={<Analytics />} />
+                <Route path="comparativas" element={<Comparisons />} />
                 <Route path="configuracion" element={<Settings />} />
               </Route>
             </Route>
