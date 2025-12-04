@@ -137,15 +137,16 @@ export const FinanceProvider = ({ children }) => {
         }
     };
 
-    const processFixedExpense = (expense) => {
-        const today = new Date().toISOString().split('T')[0];
+    const processFixedExpense = (expense, actualAmount, date) => {
         addTransaction({
             description: expense.description,
-            amount: expense.amount,
+            amount: parseFloat(actualAmount),
             type: 'expense',
-            date: today,
+            date: date,
             category: 'Fijos',
-            status: 'pending'
+            status: 'paid', // Usually fixed expenses are paid immediately when processed
+            paymentMethod: 'Efectivo', // Default, can be changed later if needed
+            fixedExpenseId: expense.id // Link to the fixed expense definition
         });
     };
 
