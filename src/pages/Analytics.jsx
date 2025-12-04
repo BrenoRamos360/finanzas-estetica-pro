@@ -1,13 +1,23 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { TrendingUp, TrendingDown, DollarSign, Activity, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Activity, Wallet, Check } from 'lucide-react';
 import DateRangePicker from '../components/Finance/DateRangePicker';
 
 const Analytics = () => {
     const { filteredTransactions, dateRange } = useFinance();
+    const allMethods = ['Efectivo', 'Tarjeta', 'Transferencia', 'Bizum', 'Web'];
+    const [selectedMethods, setSelectedMethods] = useState(allMethods);
+
+    const toggleMethod = (method) => {
+        setSelectedMethods(prev =>
+            prev.includes(method)
+                ? prev.filter(m => m !== method)
+                : [...prev, method]
+        );
+    };
 
     // --- KPI Calculations ---
     const kpis = useMemo(() => {
@@ -91,6 +101,13 @@ const Analytics = () => {
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
+    // --- Custom Method Analysis Data ---
+    const methodAnalysisTotal = useMemo(() => {
+        return filteredTransactions
+            .filter(t => t.type === 'income' && t.status === 'paid' && selectedMethods.includes(t.paymentMethod))
+            .reduce((acc, curr) => acc + curr.amount, 0);
+    }, [filteredTransactions, selectedMethods]);
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -98,64 +115,67 @@ const Analytics = () => {
                 <DateRangePicker />
             </div>
 
-            {/* Payment Method Analysis Section */}
-            <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">Análisis de Ingresos por Método</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Cash vs Digital Cards */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-green-100 text-green-600 rounded-lg">
-                                <Wallet size={20} />
-                            </div>
-                            <span className="text-sm font-medium text-gray-500">Total Efectivo</span>
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900">
-                            € {filteredTransactions
-                                .filter(t => t.type === 'income' && t.status === 'paid' && t.paymentMethod === 'Efectivo')
-                                .reduce((acc, curr) => acc + curr.amount, 0)
-                                .toFixed(2)}
-                        </h3>
-                    </div>
+            {/* Payment Method Analysis Section (Customizable) */}
+            <div className="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <h3 className="text-lg font-bold text-gray-800">Comparativa de Métodos de Pago</h3>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center">
+                    {/* Method Selector */}
+                    <div className="flex flex-wrap gap-2">
+                        {allMethods.map(method => (
+                            <button
+                                key={method}
+                                onClick={() => toggleMethod(method)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedMethods.includes(method)
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {selectedMethods.includes(method) && <Check size={12} />}
+                                {method}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Total Selected Card */}
+                    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-2">
                             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                <TrendingUp size={20} />
+                                <Wallet size={20} />
                             </div>
-                            <span className="text-sm font-medium text-gray-500">Total Digital (Banco/Web)</span>
+                            <span className="text-sm font-bold text-blue-800 uppercase">Total Seleccionado</span>
                         </div>
-                        <h3 className="text-2xl font-bold text-gray-900">
-                            € {filteredTransactions
-                                .filter(t => t.type === 'income' && t.status === 'paid' && t.paymentMethod !== 'Efectivo')
-                                .reduce((acc, curr) => acc + curr.amount, 0)
-                                .toFixed(2)}
+                        <h3 className="text-3xl font-bold text-blue-900">
+                            € {methodAnalysisTotal.toFixed(2)}
                         </h3>
+                        <p className="text-xs text-blue-600 mt-2">
+                            Suma de: {selectedMethods.length > 0 ? selectedMethods.join(', ') : 'Ninguno'}
+                        </p>
                     </div>
 
-                    {/* Detailed Breakdown List */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose Detallado</h4>
-                        <div className="space-y-3">
-                            {['Efectivo', 'Tarjeta', 'Transferencia', 'Bizum', 'Web'].map(method => {
+                    {/* Detailed Breakdown List (Filtered) */}
+                    <div className="md:col-span-2">
+                        <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose de Selección</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {selectedMethods.map(method => {
                                 const amount = filteredTransactions
                                     .filter(t => t.type === 'income' && t.status === 'paid' && t.paymentMethod === method)
                                     .reduce((acc, curr) => acc + curr.amount, 0);
 
-                                if (amount === 0) return null;
-
                                 return (
-                                    <div key={method} className="flex items-center justify-between text-sm">
+                                    <div key={method} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${method === 'Efectivo' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
-                                            <span className="text-gray-600">{method}</span>
+                                            <div className={`w-2 h-2 rounded-full bg-blue-500`}></div>
+                                            <span className="text-slate-700 font-medium">{method}</span>
                                         </div>
-                                        <span className="font-semibold text-gray-900">€ {amount.toFixed(2)}</span>
+                                        <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
                                     </div>
                                 );
                             })}
-                            {filteredTransactions.filter(t => t.type === 'income' && t.status === 'paid').length === 0 && (
-                                <p className="text-xs text-gray-400 italic">No hay ingresos registrados.</p>
+                            {selectedMethods.length === 0 && (
+                                <p className="text-sm text-slate-400 italic">Selecciona métodos para ver el desglose.</p>
                             )}
                         </div>
                     </div>
