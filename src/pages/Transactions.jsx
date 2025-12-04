@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import TransactionForm from '../components/Finance/TransactionForm';
-import { Trash2, ArrowUpCircle, ArrowDownCircle, Download, Edit, CheckCircle, Clock, Filter } from 'lucide-react';
+import { Trash2, ArrowUpCircle, ArrowDownCircle, Download, Edit, CheckCircle, Clock, Filter, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import DateRangePicker from '../components/Finance/DateRangePicker';
 
