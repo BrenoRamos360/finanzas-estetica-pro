@@ -14,17 +14,26 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!description || !amount || !category) return;
+
+        // Validation: Amount is always required
+        if (!amount) return;
+
+        // Validation: Expense requires description and category
+        if (type === 'expense' && (!description || !category)) return;
 
         const parsedAmount = parseFloat(amount.toString().replace(',', '.'));
         if (isNaN(parsedAmount) || parsedAmount <= 0) return;
 
+        // Set defaults for optional Income fields
+        const finalDescription = description || (type === 'income' ? 'Ingreso General' : description);
+        const finalCategory = category || (type === 'income' ? 'Otros' : category);
+
         const transactionData = {
-            description,
+            description: finalDescription,
             amount: parsedAmount,
             type,
             date,
-            category,
+            category: finalCategory,
             paymentMethod,
             status
         };
@@ -83,7 +92,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
                         className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                        required
+                        required={type === 'expense'}
                     >
                         <option value="">Seleccionar Categoría</option>
                         {categories[type].map(cat => (

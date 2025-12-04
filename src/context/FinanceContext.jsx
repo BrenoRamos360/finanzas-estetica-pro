@@ -26,7 +26,7 @@ export const FinanceProvider = ({ children }) => {
     // Default Categories
     const defaultCategories = {
         income: ['Servicios', 'Productos', 'Cursos', 'Otros'],
-        expense: ['Alquiler', 'Insumos', 'Marketing', 'Impuestos', 'Servicios Públicos', 'Personal', 'Otros']
+        expense: ['Alquiler', 'Insumos', 'Productos', 'Luz', 'Salarios', 'Marketing', 'Impuestos', 'Servicios Públicos', 'Personal', 'Otros']
     };
 
     const [categories, setCategories] = useState(defaultCategories);
