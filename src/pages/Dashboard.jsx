@@ -89,7 +89,7 @@ const Dashboard = () => {
     return (
         <div>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <h2 className="text-2xl font-bold text-gray-800">Panel General</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Panel General <span className="text-xs text-gray-400 font-normal">(v1.2)</span></h2>
                 <DateRangePicker />
             </div>
 
