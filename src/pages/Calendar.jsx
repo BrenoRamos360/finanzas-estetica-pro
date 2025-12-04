@@ -21,11 +21,11 @@ const CalendarView = () => {
 
     // Filter transactions for the selected date
     const selectedDateStr = format(date, 'yyyy-MM-dd');
-    const dayTransactions = transactions.filter(t => t.date === selectedDateStr);
+    const dayTransactions = transactions ? transactions.filter(t => t.date === selectedDateStr) : [];
 
     // Function to add content to calendar tiles
     const tileContent = ({ date, view }) => {
-        if (view === 'month') {
+        if (view === 'month' && transactions) {
             const dateStr = format(date, 'yyyy-MM-dd');
             const dailyTransactions = transactions.filter(t => t.date === dateStr);
 
