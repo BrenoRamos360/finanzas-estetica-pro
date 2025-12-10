@@ -54,8 +54,8 @@ const Analytics = () => {
             // Group by Month
             const months = eachMonthOfInterval({ start, end });
             data = months.map(month => {
-                const monthStart = startOfMonth(month).toISOString().split('T')[0];
-                const monthEnd = endOfMonth(month).toISOString().split('T')[0];
+                const monthStart = format(startOfMonth(month), 'yyyy-MM-dd');
+                const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
 
                 // Filter transactions for this month AND within the global selected range
                 const monthTrans = filteredTransactions.filter(t => {
