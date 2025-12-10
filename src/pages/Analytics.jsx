@@ -115,244 +115,245 @@ const Analytics = () => {
     };
 
     const categoryAnalysisTotal = useMemo(() => {
+        return filteredTransactions
             .filter(t => t.type === 'expense' && t.status === 'paid' && selectedCategories.includes(t.category || 'Otros'))
-        .reduce((acc, curr) => acc + curr.amount, 0);
-}, [filteredTransactions, selectedCategories]);
+            .reduce((acc, curr) => acc + curr.amount, 0);
+    }, [filteredTransactions, selectedCategories]);
 
-const methodAnalysisTotal = useMemo(() => {
-    return filteredTransactions
-        .filter(t => t.type === 'income' && t.status === 'paid' && selectedMethods.includes(t.paymentMethod))
-        .reduce((acc, curr) => acc + curr.amount, 0);
-}, [filteredTransactions, selectedMethods]);
+    const methodAnalysisTotal = useMemo(() => {
+        return filteredTransactions
+            .filter(t => t.type === 'income' && t.status === 'paid' && selectedMethods.includes(t.paymentMethod))
+            .reduce((acc, curr) => acc + curr.amount, 0);
+    }, [filteredTransactions, selectedMethods]);
 
-return (
-    <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-2xl font-bold text-gray-800">Reportes y Análisis</h2>
-            <DateRangePicker />
-        </div>
-
-        {/* Payment Method Analysis Section (Income) */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <h3 className="text-lg font-bold text-gray-800">Análisis de Ingresos por Método</h3>
-
-                {/* Method Selector */}
-                <div className="flex flex-wrap gap-2">
-                    {allMethods.map(method => (
-                        <button
-                            key={method}
-                            onClick={() => toggleMethod(method)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedMethods.includes(method)
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
-                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                }`}
-                        >
-                            {selectedMethods.includes(method) && <Check size={12} />}
-                            {method}
-                        </button>
-                    ))}
-                </div>
+    return (
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-gray-800">Reportes y Análisis</h2>
+                <DateRangePicker />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total Selected Card */}
-                <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <Wallet size={20} />
+            {/* Payment Method Analysis Section (Income) */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <h3 className="text-lg font-bold text-gray-800">Análisis de Ingresos por Método</h3>
+
+                    {/* Method Selector */}
+                    <div className="flex flex-wrap gap-2">
+                        {allMethods.map(method => (
+                            <button
+                                key={method}
+                                onClick={() => toggleMethod(method)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedMethods.includes(method)
+                                    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {selectedMethods.includes(method) && <Check size={12} />}
+                                {method}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Total Selected Card */}
+                    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <Wallet size={20} />
+                            </div>
+                            <span className="text-sm font-bold text-blue-800 uppercase">Total Ingresos</span>
                         </div>
-                        <span className="text-sm font-bold text-blue-800 uppercase">Total Ingresos</span>
+                        <h3 className="text-3xl font-bold text-blue-900">
+                            € {methodAnalysisTotal.toFixed(2)}
+                        </h3>
+                        <p className="text-xs text-blue-600 mt-2">
+                            Métodos seleccionados: {selectedMethods.length}
+                        </p>
                     </div>
-                    <h3 className="text-3xl font-bold text-blue-900">
-                        € {methodAnalysisTotal.toFixed(2)}
-                    </h3>
-                    <p className="text-xs text-blue-600 mt-2">
-                        Métodos seleccionados: {selectedMethods.length}
-                    </p>
-                </div>
 
-                {/* Detailed Breakdown List (Filtered) */}
-                <div className="md:col-span-2">
-                    <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose por Método</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {selectedMethods.map(method => {
-                            const amount = filteredTransactions
-                                .filter(t => t.type === 'income' && t.status === 'paid' && t.paymentMethod === method)
-                                .reduce((acc, curr) => acc + curr.amount, 0);
+                    {/* Detailed Breakdown List (Filtered) */}
+                    <div className="md:col-span-2">
+                        <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose por Método</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {selectedMethods.map(method => {
+                                const amount = filteredTransactions
+                                    .filter(t => t.type === 'income' && t.status === 'paid' && t.paymentMethod === method)
+                                    .reduce((acc, curr) => acc + curr.amount, 0);
 
-                            return (
-                                <div key={method} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full bg-blue-500`}></div>
-                                        <span className="text-slate-700 font-medium">{method}</span>
+                                return (
+                                    <div key={method} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full bg-blue-500`}></div>
+                                            <span className="text-slate-700 font-medium">{method}</span>
+                                        </div>
+                                        <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
                                     </div>
-                                    <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
-                                </div>
-                            );
-                        })}
-                        {selectedMethods.length === 0 && (
-                            <p className="text-sm text-slate-400 italic">Selecciona métodos para ver el desglose.</p>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* Expense Category Analysis Section */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-                <h3 className="text-lg font-bold text-gray-800">Análisis de Gastos por Categoría</h3>
-
-                {/* Category Selector */}
-                <div className="flex flex-wrap gap-2">
-                    {allCategories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => toggleCategory(cat)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedCategories.includes(cat)
-                                ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-200'
-                                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                }`}
-                        >
-                            {selectedCategories.includes(cat) && <Check size={12} />}
-                            {cat}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Total Selected Card */}
-                <div className="bg-red-50 p-6 rounded-xl border border-red-100 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-                            <TrendingDown size={20} />
+                                );
+                            })}
+                            {selectedMethods.length === 0 && (
+                                <p className="text-sm text-slate-400 italic">Selecciona métodos para ver el desglose.</p>
+                            )}
                         </div>
-                        <span className="text-sm font-bold text-red-800 uppercase">Total Gastos</span>
                     </div>
-                    <h3 className="text-3xl font-bold text-red-900">
-                        € {categoryAnalysisTotal.toFixed(2)}
-                    </h3>
-                    <p className="text-xs text-red-600 mt-2">
-                        Categorías seleccionadas: {selectedCategories.length}
-                    </p>
+                </div>
+            </div>
+
+            {/* Expense Category Analysis Section */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <h3 className="text-lg font-bold text-gray-800">Análisis de Gastos por Categoría</h3>
+
+                    {/* Category Selector */}
+                    <div className="flex flex-wrap gap-2">
+                        {allCategories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => toggleCategory(cat)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedCategories.includes(cat)
+                                    ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-200'
+                                    : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {selectedCategories.includes(cat) && <Check size={12} />}
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Detailed Breakdown List (Filtered) */}
-                <div className="md:col-span-2">
-                    <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose por Categoría</h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {selectedCategories.map(cat => {
-                            const amount = filteredTransactions
-                                .filter(t => t.type === 'expense' && t.status === 'paid' && (t.category || 'Otros') === cat)
-                                .reduce((acc, curr) => acc + curr.amount, 0);
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Total Selected Card */}
+                    <div className="bg-red-50 p-6 rounded-xl border border-red-100 flex flex-col justify-center">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
+                                <TrendingDown size={20} />
+                            </div>
+                            <span className="text-sm font-bold text-red-800 uppercase">Total Gastos</span>
+                        </div>
+                        <h3 className="text-3xl font-bold text-red-900">
+                            € {categoryAnalysisTotal.toFixed(2)}
+                        </h3>
+                        <p className="text-xs text-red-600 mt-2">
+                            Categorías seleccionadas: {selectedCategories.length}
+                        </p>
+                    </div>
 
-                            return (
-                                <div key={cat} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-2 h-2 rounded-full bg-red-500`}></div>
-                                        <span className="text-slate-700 font-medium">{cat}</span>
+                    {/* Detailed Breakdown List (Filtered) */}
+                    <div className="md:col-span-2">
+                        <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Desglose por Categoría</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {selectedCategories.map(cat => {
+                                const amount = filteredTransactions
+                                    .filter(t => t.type === 'expense' && t.status === 'paid' && (t.category || 'Otros') === cat)
+                                    .reduce((acc, curr) => acc + curr.amount, 0);
+
+                                return (
+                                    <div key={cat} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full bg-red-500`}></div>
+                                            <span className="text-slate-700 font-medium">{cat}</span>
+                                        </div>
+                                        <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
                                     </div>
-                                    <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
-                                </div>
-                            );
-                        })}
-                        {selectedCategories.length === 0 && (
-                            <p className="text-sm text-slate-400 italic">Selecciona categorías para ver el desglose.</p>
-                        )}
+                                );
+                            })}
+                            {selectedCategories.length === 0 && (
+                                <p className="text-sm text-slate-400 italic">Selecciona categorías para ver el desglose.</p>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {/* KPIs Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Activity size={20} /></div>
-                    <span className="text-sm font-bold text-slate-500 uppercase">Tasa de Ahorro</span>
+            {/* KPIs Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Activity size={20} /></div>
+                        <span className="text-sm font-bold text-slate-500 uppercase">Tasa de Ahorro</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900">{kpis.savingsRate.toFixed(1)}%</h3>
+                    <p className="text-xs text-slate-400 mt-1">Del total de ingresos</p>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900">{kpis.savingsRate.toFixed(1)}%</h3>
-                <p className="text-xs text-slate-400 mt-1">Del total de ingresos</p>
-            </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-red-50 text-red-600 rounded-lg"><TrendingDown size={20} /></div>
-                    <span className="text-sm font-bold text-slate-500 uppercase">Gasto Diario Prom.</span>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-red-50 text-red-600 rounded-lg"><TrendingDown size={20} /></div>
+                        <span className="text-sm font-bold text-slate-500 uppercase">Gasto Diario Prom.</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900">€ {kpis.avgDailyExpense.toFixed(2)}</h3>
+                    <p className="text-xs text-slate-400 mt-1">En el periodo seleccionado</p>
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900">€ {kpis.avgDailyExpense.toFixed(2)}</h3>
-                <p className="text-xs text-slate-400 mt-1">En el periodo seleccionado</p>
-            </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
-                    <span className="text-sm font-bold text-slate-500 uppercase">Ingresos Totales</span>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
+                        <span className="text-sm font-bold text-slate-500 uppercase">Ingresos Totales</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-green-600">€ {kpis.totalIncome.toFixed(0)}</h3>
+                    <p className="text-xs text-slate-400 mt-1">En el periodo</p>
                 </div>
-                <h3 className="text-2xl font-bold text-green-600">€ {kpis.totalIncome.toFixed(0)}</h3>
-                <p className="text-xs text-slate-400 mt-1">En el periodo</p>
-            </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><DollarSign size={20} /></div>
-                    <span className="text-sm font-bold text-slate-500 uppercase">Ahorro Total</span>
-                </div>
-                <h3 className="text-2xl font-bold text-blue-600">€ {kpis.savings.toFixed(0)}</h3>
-                <p className="text-xs text-slate-400 mt-1">En el periodo</p>
-            </div>
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Evolution Chart */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera</h3>
-                <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={evolutionData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} minTickGap={30} />
-                            <YAxis axisLine={false} tickLine={false} />
-                            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                            <Legend />
-                            <Line type="monotone" dataKey="Ingresos" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
-                            <Line type="monotone" dataKey="Gastos" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} />
-                        </LineChart>
-                    </ResponsiveContainer>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><DollarSign size={20} /></div>
+                        <span className="text-sm font-bold text-slate-500 uppercase">Ahorro Total</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-blue-600">€ {kpis.savings.toFixed(0)}</h3>
+                    <p className="text-xs text-slate-400 mt-1">En el periodo</p>
                 </div>
             </div>
 
-            {/* Category Breakdown */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-6">Distribución de Gastos</h3>
-                <div className="h-80">
-                    {categoryData.length > 0 ? (
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Evolution Chart */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera</h3>
+                    <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={categoryData} layout="vertical" margin={{ left: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                                <XAxis type="number" hide />
-                                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
-                                    {categoryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
+                            <LineChart data={evolutionData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} minTickGap={30} />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                                <Legend />
+                                <Line type="monotone" dataKey="Ingresos" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
+                                <Line type="monotone" dataKey="Gastos" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} />
+                            </LineChart>
                         </ResponsiveContainer>
-                    ) : (
-                        <div className="h-full flex items-center justify-center text-slate-400">
-                            No hay gastos en este periodo
-                        </div>
-                    )}
+                    </div>
+                </div>
+
+                {/* Category Breakdown */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-800 mb-6">Distribución de Gastos</h3>
+                    <div className="h-80">
+                        {categoryData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={categoryData} layout="vertical" margin={{ left: 20 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                    <XAxis type="number" hide />
+                                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                    <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
+                                        {categoryData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="h-full flex items-center justify-center text-slate-400">
+                                No hay gastos en este periodo
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
 };
 
 export default Analytics;
