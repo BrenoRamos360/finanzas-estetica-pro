@@ -31,6 +31,20 @@ const Comparisons = () => { // Updated
         return [...baseMetrics, ...expenseCategories];
     }, [categories]);
 
+    // Helper to get available years from transactions
+    const availableYears = useMemo(() => {
+        if (!transactions || transactions.length === 0) {
+            const currentYear = new Date().getFullYear();
+            return [currentYear, currentYear - 1];
+        }
+        const years = new Set(transactions.map(t => parseInt(t.date.substring(0, 4))));
+        // Ensure current year and previous year are always available
+        years.add(new Date().getFullYear());
+        years.add(new Date().getFullYear() - 1);
+
+        return Array.from(years).sort((a, b) => b - a);
+    }, [transactions]);
+
     // Helper to calculate value for a period and metric
     const calculateValue = (period, metric) => {
         const start = `${period}-01`;
