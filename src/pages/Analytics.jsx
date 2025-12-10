@@ -63,12 +63,13 @@ const Analytics = () => {
 
                 const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
                 const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                const profit = income - expense;
 
                 return {
                     name: format(month, 'MMM yyyy', { locale: es }),
-                    Ingresos: income,
-                    Gastos: expense,
-                    Beneficio: income - expense
+                    Ingresos: Number(income.toFixed(2)),
+                    Gastos: Number(expense.toFixed(2)),
+                    Beneficio: Number(profit.toFixed(2))
                 };
             });
         } else {
@@ -78,11 +79,15 @@ const Analytics = () => {
                 const dateStr = format(day, 'yyyy-MM-dd');
                 const dayTrans = filteredTransactions.filter(t => t.date === dateStr && t.status === 'paid');
 
+                const income = dayTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                const expense = dayTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                const profit = income - expense;
+
                 return {
                     name: format(day, 'dd MMM', { locale: es }),
-                    Ingresos: dayTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0),
-                    Gastos: dayTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0),
-                    Beneficio: dayTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0) - dayTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0)
+                    Ingresos: Number(income.toFixed(2)),
+                    Gastos: Number(expense.toFixed(2)),
+                    Beneficio: Number(profit.toFixed(2))
                 };
             });
         }
