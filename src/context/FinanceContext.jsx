@@ -11,6 +11,7 @@ import {
     where,
     onSnapshot
 } from 'firebase/firestore';
+import { format, parseISO, subDays, differenceInDays } from 'date-fns';
 
 const FinanceContext = createContext();
 
@@ -205,16 +206,16 @@ export const FinanceProvider = ({ children }) => {
 
     // --- Previous Period Metrics ---
     const getPreviousPeriod = () => {
-        const start = new Date(dateRange.startDate);
-        const end = new Date(dateRange.endDate);
-        const duration = end - start;
+        const start = parseISO(dateRange.startDate);
+        const end = parseISO(dateRange.endDate);
+        const daysDiff = differenceInDays(end, start) + 1;
 
-        const prevEnd = new Date(start.getTime() - 24 * 60 * 60 * 1000);
-        const prevStart = new Date(prevEnd.getTime() - duration);
+        const prevEnd = subDays(start, 1);
+        const prevStart = subDays(prevEnd, daysDiff - 1);
 
         return {
-            startDate: prevStart.toLocaleDateString('en-CA'),
-            endDate: prevEnd.toLocaleDateString('en-CA')
+            startDate: format(prevStart, 'yyyy-MM-dd'),
+            endDate: format(prevEnd, 'yyyy-MM-dd')
         };
     };
 
