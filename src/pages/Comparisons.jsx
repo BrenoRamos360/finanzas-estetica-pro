@@ -82,7 +82,9 @@ const Comparisons = () => { // Updated
 
     // --- Multi-Year Comparison Logic ---
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
-    const [yearsToCompare, setYearsToCompare] = useState(4);
+    const [yearsToCompare, setYearsToCompare] = useState(3);
+    const [annualMode, setAnnualMode] = useState('ytd'); // 'ytd' or 'full'
+    const [annualMetric, setAnnualMetric] = useState('all'); // 'all', 'income', 'expense', 'net'
 
     const multiYearData = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -311,165 +313,184 @@ const Comparisons = () => { // Updated
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
-            </section>
+                    <div className="border-t border-slate-200"></div>
 
-            <div className="border-t border-slate-200"></div>
-
-            {/* Section 3: YTD Comparison (Acumulado Anual) */}
-            <section className="space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-800">Comparativa Acumulada (YTD)</h2>
-                        <p className="text-sm text-slate-500">
-                            Comparando desde el 1 de Enero hasta la fecha actual ({format(new Date(), "d 'de' MMMM", { locale: es })}) de cada año.
-                        </p>
-                    </div>
-
-                    <div className="flex gap-4">
-                        <select
-                            value={yearsToCompare}
-                            onChange={(e) => setYearsToCompare(parseInt(e.target.value))}
-                            className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            {[2, 3, 4, 5, 10].map(y => (
-                                <option key={y} value={y}>Últimos {y} años</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={useMemo(() => {
-                                const currentYear = new Date().getFullYear();
-                                const currentMonth = new Date().getMonth();
-                                const currentDay = new Date().getDate();
-                                const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
-
-                                return years.map(year => {
-                                    const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
-                                    // End date is the same day/month but for the specific year
-                                    const endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
-
-                                    const periodTrans = transactions.filter(t =>
-                                        t.date >= startStr && t.date <= endStr && t.status === 'paid'
-                                    );
-
-                                    const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                    const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-
-                                    return {
-                                        year: year.toString(),
-                                        Ingresos: income,
-                                        Gastos: expense,
-                                        Neto: income - expense
-                                    };
-                                });
-                            }, [yearsToCompare, transactions])}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="year" axisLine={false} tickLine={false} />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                <Legend />
-                                <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </section>
-
-            <div className="border-t border-slate-200"></div>
-
-            {/* Section 4: Expense History */}
-            <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-end">
-                    <div className="flex-1 w-full">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Buscar por</label>
-                        <div className="flex bg-slate-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => setHistoryType('description')}
-                                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'description' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Descripción
-                            </button>
-                            <button
-                                onClick={() => setHistoryType('category')}
-                                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'category' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                            >
-                                Categoría
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="flex-[2] w-full">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                            {historyType === 'description' ? 'Término de búsqueda' : 'Categoría'}
-                        </label>
-                        {historyType === 'description' ? (
-                            <input
-                                type="text"
-                                value={historySearch}
-                                onChange={(e) => setHistorySearch(e.target.value)}
-                                placeholder="Ej: Mercadona, Luz, Alquiler..."
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                            />
-                        ) : (
-                            <select
-                                value={historyCategory}
-                                onChange={(e) => setHistoryCategory(e.target.value)}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                            >
-                                {(categories?.expense || []).map(cat => (
-                                    <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                            </select>
-                        )}
-                    </div>
-
-                    <div className="flex-1 w-full">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rango de Tiempo</label>
-                        <select
-                            value={historyMonths}
-                            onChange={(e) => setHistoryMonths(parseInt(e.target.value))}
-                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                        >
-                            <option value={6}>Últimos 6 meses</option>
-                            <option value={12}>Último año</option>
-                            <option value={24}>Últimos 2 años</option>
-                            <option value={60}>Últimos 5 años</option>
-                            <option value={120}>Últimos 10 años</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
-                        {historyData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={historyData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                    <YAxis axisLine={false} tickLine={false} />
-                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                    <Bar dataKey="amount" name="Gasto" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                <Calendar size={48} className="mb-4 opacity-50" />
-                                <p>Ingresa un término de búsqueda para ver el historial</p>
+                    {/* Section 3: Annual Comparison (YTD vs Full Year) */}
+                    <section className="space-y-6">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800">Comparativa Anual</h2>
+                                <p className="text-sm text-slate-500">
+                                    Analiza el rendimiento anual. Puedes ver el año completo o solo hasta la fecha actual (YTD).
+                                </p>
                             </div>
-                        )}
-                    </div>
-                </div>
-            </section>
+
+                            <div className="flex flex-wrap gap-4">
+                                {/* Time Range Toggle */}
+                                <div className="flex bg-slate-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setAnnualMode('ytd')}
+                                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${annualMode === 'ytd' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        YTD (Hasta hoy)
+                                    </button>
+                                    <button
+                                        onClick={() => setAnnualMode('full')}
+                                        className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${annualMode === 'full' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Año Completo
+                                    </button>
+                                </div>
+
+                                {/* Metric Toggle */}
+                                <select
+                                    value={annualMetric}
+                                    onChange={(e) => setAnnualMetric(e.target.value)}
+                                    className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">Ingresos y Gastos</option>
+                                    <option value="income">Solo Ingresos</option>
+                                    <option value="expense">Solo Gastos</option>
+                                    <option value="net">Beneficio Neto</option>
+                                </select>
+
+                                {/* Years Selector */}
+                                <select
+                                    value={yearsToCompare}
+                                    onChange={(e) => setYearsToCompare(parseInt(e.target.value))}
+                                    className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {[2, 3, 4, 5, 10].map(y => (
+                                        <option key={y} value={y}>Últimos {y} años</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="h-80">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={useMemo(() => {
+                                        const currentYear = new Date().getFullYear();
+                                        const currentMonth = new Date().getMonth();
+                                        const currentDay = new Date().getDate();
+                                        const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
+
+                                        return years.map(year => {
+                                            const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
+                                            let endStr;
+
+                                            if (annualMode === 'ytd') {
+                                                // End date is today's day/month in that year
+                                                endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
+                                            } else {
+                                                // End date is Dec 31st of that year
+                                                endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
+                                            }
+
+                                            const periodTrans = transactions.filter(t =>
+                                                t.date >= startStr && t.date <= endStr && t.status === 'paid'
+                                            );
+
+                                            const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                            const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+                                            return {
+                                                year: year.toString(),
+                                                Ingresos: income,
+                                                Gastos: expense,
+                                                Neto: income - expense
+                                            };
+                                        });
+                                        <div className="border-t border-slate-200"></div>
+
+                                        {/* Section 4: Expense History */ }
+                                        <section className="space-y-6">
+                                            <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
+
+                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-end">
+                                                <div className="flex-1 w-full">
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Buscar por</label>
+                                                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                                                        <button
+                                                            onClick={() => setHistoryType('description')}
+                                                            className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'description' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                                        >
+                                                            Descripción
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setHistoryType('category')}
+                                                            className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'category' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                                        >
+                                                            Categoría
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex-[2] w-full">
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                                                        {historyType === 'description' ? 'Término de búsqueda' : 'Categoría'}
+                                                    </label>
+                                                    {historyType === 'description' ? (
+                                                        <input
+                                                            type="text"
+                                                            value={historySearch}
+                                                            onChange={(e) => setHistorySearch(e.target.value)}
+                                                            placeholder="Ej: Mercadona, Luz, Alquiler..."
+                                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                                        />
+                                                    ) : (
+                                                        <select
+                                                            value={historyCategory}
+                                                            onChange={(e) => setHistoryCategory(e.target.value)}
+                                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                                        >
+                                                            {(categories?.expense || []).map(cat => (
+                                                                <option key={cat} value={cat}>{cat}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex-1 w-full">
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rango de Tiempo</label>
+                                                    <select
+                                                        value={historyMonths}
+                                                        onChange={(e) => setHistoryMonths(parseInt(e.target.value))}
+                                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                                    >
+                                                        <option value={6}>Últimos 6 meses</option>
+                                                        <option value={12}>Último año</option>
+                                                        <option value={24}>Últimos 2 años</option>
+                                                        <option value={60}>Últimos 5 años</option>
+                                                        <option value={120}>Últimos 10 años</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                                                <div className="h-80">
+                                                    {historyData.length > 0 ? (
+                                                        <ResponsiveContainer width="100%" height="100%">
+                                                            <BarChart data={historyData}>
+                                                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                                                <YAxis axisLine={false} tickLine={false} />
+                                                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                                                <Bar dataKey="amount" name="Gasto" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                                            </BarChart>
+                                                        </ResponsiveContainer>
+                                                    ) : (
+                                                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                                            <Calendar size={48} className="mb-4 opacity-50" />
+                                                            <p>Ingresa un término de búsqueda para ver el historial</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </section>
         </div>
-    );
+                            );
 };
 
-export default Comparisons;
+                            export default Comparisons;
