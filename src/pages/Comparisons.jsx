@@ -445,14 +445,18 @@ const Comparisons = () => { // Updated
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={multiYearData}>
+                            <BarChart data={multiYearData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="year" axisLine={false} tickLine={false} />
                                 <YAxis axisLine={false} tickLine={false} />
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
-                                <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]}>
+                                    <LabelList dataKey="Ingresos" position="top" style={{ fill: '#22c55e', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
+                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
+                                    <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -548,7 +552,7 @@ const Comparisons = () => { // Updated
                                         Neto: Number((income - expense).toFixed(2))
                                     };
                                 });
-                            }, [yearsToCompare, annualMode, transactions])}>
+                            }, [yearsToCompare, annualMode, transactions])} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="year" axisLine={false} tickLine={false} />
                                 <YAxis axisLine={false} tickLine={false} />
