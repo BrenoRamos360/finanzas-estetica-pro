@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { Wallet, TrendingUp, TrendingDown, Clock, AlertCircle, CheckCircle, ArrowUpCircle, ArrowDownCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { Wallet, TrendingUp, TrendingDown, Clock, AlertCircle, CheckCircle, ArrowUpCircle, ArrowDownCircle, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -86,6 +86,8 @@ const Dashboard = () => {
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
 
+    const [isBalanceVisible, setIsBalanceVisible] = React.useState(false);
+
     return (
         <div>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -96,16 +98,25 @@ const Dashboard = () => {
             {/* Main Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 {/* Saldo Real (Global) */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
                     <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
                             <Wallet size={22} />
                         </div>
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo Actual</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Saldo Actual</span>
+                            <button
+                                onClick={() => setIsBalanceVisible(!isBalanceVisible)}
+                                className="text-slate-400 hover:text-blue-600 transition-colors"
+                                title={isBalanceVisible ? "Ocultar saldo" : "Mostrar saldo"}
+                            >
+                                {isBalanceVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
                     <p className="text-slate-500 text-sm font-medium">Disponible Hoy</p>
                     <h3 className={`text-2xl font-bold mt-1 ${balance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
-                        € {balance.toFixed(2)}
+                        {isBalanceVisible ? `€ ${balance.toFixed(2)}` : '••••••'}
                     </h3>
                 </div>
 
