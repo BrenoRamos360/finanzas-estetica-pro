@@ -313,15 +313,15 @@ const Analytics = () => {
                     <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={evolutionData}>
+                            <BarChart data={evolutionData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="name" axisLine={false} tickLine={false} minTickGap={30} />
                                 <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                                 <Legend />
-                                <Line type="monotone" dataKey="Ingresos" stroke="#22c55e" strokeWidth={3} dot={{ r: 4 }} />
-                                <Line type="monotone" dataKey="Gastos" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} />
-                            </LineChart>
+                                <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                            </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
