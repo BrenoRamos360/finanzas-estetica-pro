@@ -3,13 +3,13 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB2RysI7UnJkTqCtQd3juf9xVZ5-tZy7pA",
-    authDomain: "finanzas-pro-a52ba.firebaseapp.com",
-    projectId: "finanzas-pro-a52ba",
-    storageBucket: "finanzas-pro-a52ba.firebasestorage.app",
-    messagingSenderId: "196333297046",
-    appId: "1:196333297046:web:0db4c35689f6e6d4c211b7",
-    measurementId: "G-Q2JCYMG4NV"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
