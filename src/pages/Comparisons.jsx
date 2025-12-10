@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line } from 'recharts';
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -111,6 +111,34 @@ const Comparisons = () => { // Updated
             };
         });
     }, [selectedMonth, yearsToCompare, transactions]);
+
+    // --- Monthly Evolution Sequence Logic ---
+    const [monthlyEvolutionMonths, setMonthlyEvolutionMonths] = useState(12);
+
+    const monthlyEvolutionData = useMemo(() => {
+        const endDate = new Date();
+        const startDate = subMonths(endDate, monthlyEvolutionMonths - 1);
+        const months = eachMonthOfInterval({ start: startDate, end: endDate });
+
+        return months.map(month => {
+            const mStart = format(startOfMonth(month), 'yyyy-MM-dd');
+            const mEnd = format(endOfMonth(month), 'yyyy-MM-dd');
+
+            const monthTrans = transactions.filter(t =>
+                t.date >= mStart && t.date <= mEnd && t.status === 'paid'
+            );
+
+            const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+            return {
+                name: format(month, 'MMM yy', { locale: es }),
+                Ingresos: income,
+                Gastos: expense,
+                Beneficio: income - expense
+            };
+        });
+    }, [monthlyEvolutionMonths, transactions]);
 
     // --- Expense History Logic ---
     const [historyType, setHistoryType] = useState('description'); // 'description' or 'category'
@@ -429,7 +457,42 @@ const Comparisons = () => { // Updated
 
             <div className="border-t border-slate-200"></div>
 
-            {/* Section 4: Expense History */}
+            {/* Section 4: Monthly Evolution Sequence */}
+            <section className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <h2 className="text-2xl font-bold text-gray-800">Evolución Mensual (Secuencia)</h2>
+                    <select
+                        value={monthlyEvolutionMonths}
+                        onChange={(e) => setMonthlyEvolutionMonths(parseInt(e.target.value))}
+                        className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value={6}>Últimos 6 meses</option>
+                        <option value={12}>Últimos 12 meses</option>
+                        <option value={24}>Últimos 24 meses</option>
+                    </select>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={monthlyEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                <Legend />
+                                <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20} />
+                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
+                                <Line type="monotone" dataKey="Beneficio" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} />
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </section>
+
+            <div className="border-t border-slate-200"></div>
+
+            {/* Section 5: Expense History */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
 
