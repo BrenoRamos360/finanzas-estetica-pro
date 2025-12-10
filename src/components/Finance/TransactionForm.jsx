@@ -132,6 +132,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
                         <option value="Transferencia">Transferencia</option>
                         <option value="Bizum">Bizum</option>
                         <option value="Web">Web</option>
+                        <option value="General">General (Histórico)</option>
                     </select>
                 </div>
                 <div className="md:col-span-2">
