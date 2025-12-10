@@ -3,12 +3,158 @@ import Calendar from 'react-calendar';
 import { useFinance } from '../context/FinanceContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ArrowUpCircle, ArrowDownCircle, X, Plus, Eye, EyeOff, TrendingUp, TrendingDown, LayoutGrid, Pencil } from 'lucide-react'; // Added Pencil
+import { ArrowUpCircle, ArrowDownCircle, X, Plus, Eye, EyeOff, TrendingUp, TrendingDown, LayoutGrid, Pencil } from 'lucide-react';
+import TransactionForm from '../components/Finance/TransactionForm';
+import 'react-calendar/dist/Calendar.css';
 
-// ... (inside component)
-const [editingTransaction, setEditingTransaction] = useState(null); // New state
+const CalendarView = () => {
+    const { transactions } = useFinance();
+    const [date, setDate] = useState(new Date());
+    const [showModal, setShowModal] = useState(false);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [viewMode, setViewMode] = useState('all'); // 'all', 'income', 'expense', 'none'
+    const [editingTransaction, setEditingTransaction] = useState(null);
 
-// ... (inside render)
+    const onChange = (newDate) => {
+        setDate(newDate);
+        setShowModal(true);
+        setShowAddForm(false);
+        setEditingTransaction(null);
+    };
+
+    // Filter transactions for the selected date
+    const selectedDateStr = format(date, 'yyyy-MM-dd');
+    const dayTransactions = transactions ? transactions.filter(t => t.date === selectedDateStr) : [];
+
+    // Function to add content to calendar tiles
+    const tileContent = ({ date, view }) => {
+        if (view === 'month' && transactions) {
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const dailyTransactions = transactions.filter(t => t.date === dateStr);
+
+            if (dailyTransactions.length > 0) {
+                const income = dailyTransactions
+                    .filter(t => t.type === 'income')
+                    .reduce((acc, curr) => acc + curr.amount, 0);
+
+                const expense = dailyTransactions
+                    .filter(t => t.type === 'expense')
+                    .reduce((acc, curr) => acc + curr.amount, 0);
+
+                const balance = income - expense;
+
+                if (viewMode === 'none') {
+                    return (
+                        <div className="flex justify-center mt-2">
+                            <div className={`w-2 h-2 rounded-full ${balance >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className="w-full mt-2 flex flex-col gap-1">
+                        {(viewMode === 'all' || viewMode === 'income') && income > 0 && (
+                            <div className="flex items-center justify-between text-xs text-green-600 font-medium bg-green-50 px-1.5 py-0.5 rounded">
+                                <ArrowUpCircle size={12} />
+                                <span>{income.toFixed(0)}</span>
+                            </div>
+                        )}
+                        {(viewMode === 'all' || viewMode === 'expense') && expense > 0 && (
+                            <div className="flex items-center justify-between text-xs text-red-600 font-medium bg-red-50 px-1.5 py-0.5 rounded">
+                                <ArrowDownCircle size={12} />
+                                <span>{expense.toFixed(0)}</span>
+                            </div>
+                        )}
+                        {viewMode === 'all' && (
+                            <div className={`flex items-center justify-between text-sm font-bold px-1.5 py-0.5 border-t border-gray-100 mt-1 pt-1 ${balance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                                <span className="text-[10px] uppercase text-gray-400 font-normal">Bal</span>
+                                <span>{balance.toFixed(0)}</span>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+        }
+    };
+
+    return (
+        <div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Calendario Financiero</h2>
+
+                {/* View Mode Selector */}
+                <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+                    <button
+                        onClick={() => setViewMode('all')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'all' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <LayoutGrid size={16} /> Todo
+                    </button>
+                    <button
+                        onClick={() => setViewMode('income')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'income' ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <TrendingUp size={16} /> Entradas
+                    </button>
+                    <button
+                        onClick={() => setViewMode('expense')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'expense' ? 'bg-red-50 text-red-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <TrendingDown size={16} /> Salidas
+                    </button>
+                    <button
+                        onClick={() => setViewMode('none')}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${viewMode === 'none' ? 'bg-gray-100 text-gray-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                        <EyeOff size={16} /> Limpio
+                    </button>
+                </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <style>{`
+          .react-calendar { 
+            width: 100%; 
+            border: none; 
+            font-family: inherit;
+          }
+          .react-calendar__tile {
+            height: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 10px;
+          }
+          .react-calendar__tile--active {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+          }
+          .react-calendar__tile--now {
+            background: #fef3c7;
+          }
+        `}</style>
+                <Calendar
+                    onClickDay={onChange}
+                    value={date}
+                    tileContent={tileContent}
+                    locale="es-ES"
+                />
+            </div>
+
+            {/* Modal for Day Details */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h3 className="font-bold text-gray-800">
+                                {format(date, "d 'de' MMMM, yyyy", { locale: es })}
+                            </h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
                         <div className="p-4 max-h-[60vh] overflow-y-auto">
                             {showAddForm ? (
                                 <div className="mb-4">
@@ -87,10 +233,10 @@ const [editingTransaction, setEditingTransaction] = useState(null); // New state
                                 Cerrar
                             </button>
                         </div>
-                    </div >
-                </div >
+                    </div>
+                </div>
             )}
-        </div >
+        </div>
     );
 };
 
