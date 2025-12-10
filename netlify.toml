@@ -4,6 +4,7 @@
 
 [build.environment]
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+  CI = "false"
 
 [dev]
   command = "npm run dev"
