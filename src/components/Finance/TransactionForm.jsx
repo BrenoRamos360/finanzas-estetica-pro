@@ -59,7 +59,7 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
     return (
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                {initialData ? 'Editar Movimiento' : 'Nuevo Movimiento'}
+                {initialData ? 'Editar Movimiento' : 'Nuevo Movimiento (v2)'}
             </h3>
 
             <div className="flex gap-4 mb-4">
