@@ -10,8 +10,25 @@ const Comparisons = () => { // Updated
 
     // State for selectors
     const [metricType, setMetricType] = useState('total_income'); // total_income, total_expense, net_income, category_X
+    const [comparisonType, setComparisonType] = useState('month'); // 'month', 'year', 'custom'
+
+    // Month Mode State
     const [periodA, setPeriodA] = useState(format(subMonths(new Date(), 1), 'yyyy-MM')); // Default: Last Month
     const [periodB, setPeriodB] = useState(format(new Date(), 'yyyy-MM')); // Default: Current Month
+
+    // Year Mode State
+    const [yearA, setYearA] = useState(new Date().getFullYear() - 1);
+    const [yearB, setYearB] = useState(new Date().getFullYear());
+
+    // Custom Mode State
+    const [customRangeA, setCustomRangeA] = useState({
+        start: format(subMonths(new Date(), 1), 'yyyy-MM-dd'),
+        end: format(new Date(), 'yyyy-MM-dd')
+    });
+    const [customRangeB, setCustomRangeB] = useState({
+        start: format(subMonths(new Date(), 2), 'yyyy-MM-dd'),
+        end: format(subMonths(new Date(), 1), 'yyyy-MM-dd')
+    });
 
     // Helper to get available metrics
     const metrics = useMemo(() => {
@@ -26,8 +43,6 @@ const Comparisons = () => { // Updated
             label: `Gasto: ${cat}`
         }));
 
-        // We could add income categories too if needed
-
         return [...baseMetrics, ...expenseCategories];
     }, [categories]);
 
@@ -38,20 +53,42 @@ const Comparisons = () => { // Updated
             return [currentYear, currentYear - 1];
         }
         const years = new Set(transactions.map(t => parseInt(t.date.substring(0, 4))));
-        // Ensure current year and previous year are always available
         years.add(new Date().getFullYear());
         years.add(new Date().getFullYear() - 1);
-
         return Array.from(years).sort((a, b) => b - a);
     }, [transactions]);
 
-    // Helper to calculate value for a period and metric
-    const calculateValue = (period, metric) => {
-        const start = `${period}-01`;
-        // Calculate end of month correctly
-        const dateObj = parseISO(start);
-        const end = format(endOfMonth(dateObj), 'yyyy-MM-dd');
+    // Helper to get start/end dates and label based on mode
+    const getPeriodDetails = (type, pA, pB, yA, yB, cA, cB, isB) => {
+        let start, end, label;
 
+        if (type === 'month') {
+            const period = isB ? pB : pA;
+            start = `${period}-01`;
+            end = format(endOfMonth(parseISO(start)), 'yyyy-MM-dd');
+            label = format(parseISO(start), 'MMMM yyyy', { locale: es });
+        } else if (type === 'year') {
+            const year = isB ? yB : yA;
+            start = `${year}-01-01`;
+            end = `${year}-12-31`;
+            label = year.toString();
+        } else {
+            const range = isB ? cB : cA;
+            start = range.start;
+            end = range.end;
+            label = `${format(parseISO(start), 'dd MMM', { locale: es })} - ${format(parseISO(end), 'dd MMM', { locale: es })}`;
+        }
+        return { start, end, label };
+    };
+
+    const periodADetails = getPeriodDetails(comparisonType, periodA, periodB, yearA, yearB, customRangeA, customRangeB, false);
+    const periodBDetails = getPeriodDetails(comparisonType, periodA, periodB, yearA, yearB, customRangeA, customRangeB, true);
+
+    const labelA = periodADetails.label;
+    const labelB = periodBDetails.label;
+
+    // Helper to calculate value for a period and metric
+    const calculateValue = (start, end, metric) => {
         const periodTrans = transactions.filter(t =>
             t.date >= start && t.date <= end && t.status === 'paid'
         );
@@ -76,8 +113,8 @@ const Comparisons = () => { // Updated
         return 0;
     };
 
-    const valueA = useMemo(() => calculateValue(periodA, metricType), [periodA, metricType, transactions]);
-    const valueB = useMemo(() => calculateValue(periodB, metricType), [periodB, metricType, transactions]);
+    const valueA = useMemo(() => calculateValue(periodADetails.start, periodADetails.end, metricType), [periodADetails, metricType, transactions]);
+    const valueB = useMemo(() => calculateValue(periodBDetails.start, periodBDetails.end, metricType), [periodBDetails, metricType, transactions]);
 
     const difference = valueB - valueA;
     const percentChange = valueA !== 0 ? ((valueB - valueA) / valueA) * 100 : (valueB > 0 ? 100 : 0);
@@ -85,8 +122,8 @@ const Comparisons = () => { // Updated
     const chartData = [
         {
             name: 'Comparativa',
-            [format(parseISO(`${periodA}-01`), 'MMM yyyy', { locale: es })]: valueA,
-            [format(parseISO(`${periodB}-01`), 'MMM yyyy', { locale: es })]: valueB,
+            [labelA]: valueA,
+            [labelB]: valueB,
         }
     ];
 
@@ -299,46 +336,131 @@ const Comparisons = () => { // Updated
 
     return (
         <div className="space-y-12">
-            {/* Section 1: Custom Period Comparison (Existing) */}
+            {/* Section 1: Custom Period Comparison (Refined) */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Comparativa entre Periodos</h2>
 
                 {/* Controls */}
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Métrica a Comparar</label>
-                        <select
-                            value={metricType}
-                            onChange={(e) => setMetricType(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
-                        >
-                            {metrics.map(m => (
-                                <option key={m.id} value={m.id}>{m.label}</option>
-                            ))}
-                        </select>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-6">
+                    {/* Top Row: Metric & Type Selectors */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Métrica a Comparar</label>
+                            <select
+                                value={metricType}
+                                onChange={(e) => setMetricType(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                            >
+                                {metrics.map(m => (
+                                    <option key={m.id} value={m.id}>{m.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Periodo</label>
+                            <div className="flex bg-slate-100 p-1 rounded-xl">
+                                <button
+                                    onClick={() => setComparisonType('month')}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${comparisonType === 'month' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Mes
+                                </button>
+                                <button
+                                    onClick={() => setComparisonType('year')}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${comparisonType === 'year' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Año
+                                </button>
+                                <button
+                                    onClick={() => setComparisonType('custom')}
+                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${comparisonType === 'custom' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                >
+                                    Personalizado
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1">
+                    {/* Bottom Row: Period Selectors */}
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                        {/* Period A */}
+                        <div className="flex-1 w-full">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Periodo A (Base)</label>
-                            <input
-                                type="month"
-                                value={periodA}
-                                onChange={(e) => setPeriodA(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
-                            />
+                            {comparisonType === 'month' && (
+                                <input
+                                    type="month"
+                                    value={periodA}
+                                    onChange={(e) => setPeriodA(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                                />
+                            )}
+                            {comparisonType === 'year' && (
+                                <select
+                                    value={yearA}
+                                    onChange={(e) => setYearA(parseInt(e.target.value))}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                                >
+                                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            )}
+                            {comparisonType === 'custom' && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="date"
+                                        value={customRangeA.start}
+                                        onChange={(e) => setCustomRangeA({ ...customRangeA, start: e.target.value })}
+                                        className="w-full px-2 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700 text-sm"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={customRangeA.end}
+                                        onChange={(e) => setCustomRangeA({ ...customRangeA, end: e.target.value })}
+                                        className="w-full px-2 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700 text-sm"
+                                    />
+                                </div>
+                            )}
                         </div>
-                        <div className="pt-6 text-slate-300">
+
+                        <div className="text-slate-300 hidden md:block pt-6">
                             <ArrowRight />
                         </div>
-                        <div className="flex-1">
+
+                        {/* Period B */}
+                        <div className="flex-1 w-full">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Periodo B (Actual)</label>
-                            <input
-                                type="month"
-                                value={periodB}
-                                onChange={(e) => setPeriodB(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
-                            />
+                            {comparisonType === 'month' && (
+                                <input
+                                    type="month"
+                                    value={periodB}
+                                    onChange={(e) => setPeriodB(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                                />
+                            )}
+                            {comparisonType === 'year' && (
+                                <select
+                                    value={yearB}
+                                    onChange={(e) => setYearB(parseInt(e.target.value))}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                                >
+                                    {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            )}
+                            {comparisonType === 'custom' && (
+                                <div className="flex gap-2">
+                                    <input
+                                        type="date"
+                                        value={customRangeB.start}
+                                        onChange={(e) => setCustomRangeB({ ...customRangeB, start: e.target.value })}
+                                        className="w-full px-2 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700 text-sm"
+                                    />
+                                    <input
+                                        type="date"
+                                        value={customRangeB.end}
+                                        onChange={(e) => setCustomRangeB({ ...customRangeB, end: e.target.value })}
+                                        className="w-full px-2 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700 text-sm"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -348,7 +470,7 @@ const Comparisons = () => { // Updated
                     {/* Stat Card A */}
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
                         <span className="text-sm font-bold text-slate-400 uppercase mb-2">
-                            {format(parseISO(`${periodA}-01`), 'MMMM yyyy', { locale: es })}
+                            {labelA}
                         </span>
                         <span className="text-3xl font-bold text-slate-700">€ {valueA.toFixed(2)}</span>
                     </div>
@@ -357,7 +479,7 @@ const Comparisons = () => { // Updated
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center relative overflow-hidden">
                         <div className={`absolute top-0 left-0 w-full h-1 ${difference >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                         <span className="text-sm font-bold text-slate-400 uppercase mb-2">
-                            {format(parseISO(`${periodB}-01`), 'MMMM yyyy', { locale: es })}
+                            {labelB}
                         </span>
                         <span className={`text-4xl font-bold ${difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             € {valueB.toFixed(2)}
@@ -392,18 +514,13 @@ const Comparisons = () => { // Updated
                                 <YAxis axisLine={false} tickLine={false} />
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
-                                {/* Render bars chronologically */}
-                                {periodA < periodB ? (
-                                    <>
-                                        <Bar dataKey={format(parseISO(`${periodA}-01`), 'MMM yyyy', { locale: es })} fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey={format(parseISO(`${periodB}-01`), 'MMM yyyy', { locale: es })} fill={difference >= 0 ? '#22c55e' : '#ef4444'} radius={[4, 4, 0, 0]} />
-                                    </>
-                                ) : (
-                                    <>
-                                        <Bar dataKey={format(parseISO(`${periodB}-01`), 'MMM yyyy', { locale: es })} fill={difference >= 0 ? '#22c55e' : '#ef4444'} radius={[4, 4, 0, 0]} />
-                                        <Bar dataKey={format(parseISO(`${periodA}-01`), 'MMM yyyy', { locale: es })} fill="#94a3b8" radius={[4, 4, 0, 0]} />
-                                    </>
-                                )}
+                                {/* Render bars chronologically if possible, or just A then B */}
+                                <Bar dataKey={labelA} fill="#94a3b8" radius={[4, 4, 0, 0]}>
+                                    <LabelList dataKey={labelA} position="top" style={{ fill: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
+                                <Bar dataKey={labelB} fill={difference >= 0 ? '#22c55e' : '#ef4444'} radius={[4, 4, 0, 0]}>
+                                    <LabelList dataKey={labelB} position="top" style={{ fill: difference >= 0 ? '#22c55e' : '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
