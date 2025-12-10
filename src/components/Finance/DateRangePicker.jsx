@@ -12,8 +12,8 @@ const DateRangePicker = () => {
         {
             label: 'Este Mes',
             getValue: () => ({
-                startDate: startOfMonth(new Date()).toISOString().split('T')[0],
-                endDate: endOfMonth(new Date()).toISOString().split('T')[0]
+                startDate: format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+                endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
             })
         },
         {
@@ -21,23 +21,23 @@ const DateRangePicker = () => {
             getValue: () => {
                 const lastMonth = subMonths(new Date(), 1);
                 return {
-                    startDate: startOfMonth(lastMonth).toISOString().split('T')[0],
-                    endDate: endOfMonth(lastMonth).toISOString().split('T')[0]
+                    startDate: format(startOfMonth(lastMonth), 'yyyy-MM-dd'),
+                    endDate: format(endOfMonth(lastMonth), 'yyyy-MM-dd')
                 };
             }
         },
         {
             label: 'Últimos 3 Meses',
             getValue: () => ({
-                startDate: startOfMonth(subMonths(new Date(), 2)).toISOString().split('T')[0],
-                endDate: endOfMonth(new Date()).toISOString().split('T')[0]
+                startDate: format(startOfMonth(subMonths(new Date(), 2)), 'yyyy-MM-dd'),
+                endDate: format(endOfMonth(new Date()), 'yyyy-MM-dd')
             })
         },
         {
             label: 'Este Año',
             getValue: () => ({
-                startDate: startOfYear(new Date()).toISOString().split('T')[0],
-                endDate: endOfYear(new Date()).toISOString().split('T')[0]
+                startDate: format(startOfYear(new Date()), 'yyyy-MM-dd'),
+                endDate: format(endOfYear(new Date()), 'yyyy-MM-dd')
             })
         }
     ];
