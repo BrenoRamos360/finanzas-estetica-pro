@@ -8,7 +8,7 @@ import DateRangePicker from '../components/Finance/DateRangePicker';
 
 const Analytics = () => {
     const { filteredTransactions, dateRange } = useFinance();
-    const allMethods = ['Efectivo', 'Tarjeta', 'Transferencia', 'Bizum', 'Web'];
+    const allMethods = ['Efectivo', 'Tarjeta', 'Transferencia', 'Bizum', 'Web', 'General'];
     const [selectedMethods, setSelectedMethods] = useState(allMethods);
 
     const toggleMethod = (method) => {
