@@ -306,50 +306,47 @@ const Analytics = () => {
                 </div>
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Evolution Chart */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera</h3>
-                    <div className="h-80">
+            {/* Evolution Chart - Full Width */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera</h3>
+                <div className="h-96"> {/* Increased height slightly for better visibility */}
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={evolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                            <YAxis axisLine={false} tickLine={false} />
+                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                            <Legend />
+                            <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Category Breakdown - Full Width */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 mb-6">Distribución de Gastos</h3>
+                <div className="h-80">
+                    {categoryData.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={evolutionData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" axisLine={false} tickLine={false} minTickGap={30} />
-                                <YAxis axisLine={false} tickLine={false} />
-                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                                <Legend />
-                                <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                            <BarChart data={categoryData} layout="vertical" margin={{ left: 20, right: 30 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                <XAxis type="number" hide />
+                                <YAxis dataKey="name" type="category" width={150} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
+                                    {categoryData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Bar>
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Category Breakdown */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-800 mb-6">Distribución de Gastos</h3>
-                    <div className="h-80">
-                        {categoryData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={categoryData} layout="vertical" margin={{ left: 20 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                                    <XAxis type="number" hide />
-                                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                                    <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                    <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
-                                        {categoryData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-slate-400">
-                                No hay gastos en este periodo
-                            </div>
-                        )}
-                    </div>
+                    ) : (
+                        <div className="h-full flex items-center justify-center text-slate-400">
+                            No hay gastos en este periodo
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
