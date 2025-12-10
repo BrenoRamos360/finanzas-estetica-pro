@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line, LabelList, LineChart } from 'recharts';
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar, Plus, Trash2 } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -191,6 +191,55 @@ const Comparisons = () => { // Updated
             };
         });
     };
+
+    // --- Master Comparison Overlay Logic ---
+    const [overlayYears, setOverlayYears] = useState([new Date().getFullYear(), new Date().getFullYear() - 1]);
+    const [overlayMetric, setOverlayMetric] = useState('income');
+
+    const toggleOverlayYear = (year) => {
+        setOverlayYears(prev =>
+            prev.includes(year)
+                ? prev.filter(y => y !== year)
+                : [...prev, year]
+        );
+    };
+
+    const overlayData = useMemo(() => {
+        const months = eachMonthOfInterval({
+            start: new Date(2024, 0, 1), // Dummy year just for month names
+            end: new Date(2024, 11, 31)
+        });
+
+        return months.map(month => {
+            const monthName = format(month, 'MMM', { locale: es });
+            const dataPoint = { name: monthName };
+
+            overlayYears.forEach(year => {
+                const mStart = format(new Date(year, month.getMonth(), 1), 'yyyy-MM-dd');
+                const mEnd = format(endOfMonth(new Date(year, month.getMonth(), 1)), 'yyyy-MM-dd');
+
+                const monthTrans = transactions.filter(t =>
+                    t.date >= mStart && t.date <= mEnd && t.status === 'paid'
+                );
+
+                let value = 0;
+                if (overlayMetric === 'income') {
+                    value = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                } else if (overlayMetric === 'expense') {
+                    value = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                } else {
+                    const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                    const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                    value = income - expense;
+                }
+                dataPoint[year] = Number(value.toFixed(2));
+            });
+
+            return dataPoint;
+        });
+    }, [overlayYears, overlayMetric, transactions]);
+
+    const COLORS = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6'];
 
     // --- Expense History Logic ---
     const [historyType, setHistoryType] = useState('description'); // 'description' or 'category'
@@ -618,7 +667,69 @@ const Comparisons = () => { // Updated
 
             <div className="border-t border-slate-200"></div>
 
-            {/* Section 6: Expense History */}
+            {/* Section 6: Master Comparison Overlay (Year vs Year) */}
+            <section className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Comparativa Maestra (Superposición)</h2>
+                        <p className="text-sm text-gray-500">Superpone años para ver tendencias estacionales.</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <select
+                            value={overlayMetric}
+                            onChange={(e) => setOverlayMetric(e.target.value)}
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="income">Ingresos</option>
+                            <option value="expense">Gastos</option>
+                            <option value="profit">Beneficio</option>
+                        </select>
+                        <div className="flex gap-2">
+                            {availableYears.map(year => (
+                                <button
+                                    key={year}
+                                    onClick={() => toggleOverlayYear(year)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${overlayYears.includes(year)
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                                        : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                                        }`}
+                                >
+                                    {year}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-96">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={overlayData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                <Legend />
+                                {overlayYears.map((year, index) => (
+                                    <Line
+                                        key={year}
+                                        type="monotone"
+                                        dataKey={year}
+                                        stroke={COLORS[index % COLORS.length]}
+                                        strokeWidth={3}
+                                        dot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
+                                        activeDot={{ r: 6 }}
+                                    />
+                                ))}
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </section>
+
+            <div className="border-t border-slate-200"></div>
+
+            {/* Section 7: Expense History */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
 
