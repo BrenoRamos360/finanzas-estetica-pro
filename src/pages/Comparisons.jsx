@@ -316,7 +316,74 @@ const Comparisons = () => { // Updated
 
             <div className="border-t border-slate-200"></div>
 
-            {/* Section 3: Expense History */}
+            {/* Section 3: YTD Comparison (Acumulado Anual) */}
+            <section className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Comparativa Acumulada (YTD)</h2>
+                        <p className="text-sm text-slate-500">
+                            Comparando desde el 1 de Enero hasta la fecha actual ({format(new Date(), "d 'de' MMMM", { locale: es })}) de cada año.
+                        </p>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <select
+                            value={yearsToCompare}
+                            onChange={(e) => setYearsToCompare(parseInt(e.target.value))}
+                            className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {[2, 3, 4, 5, 10].map(y => (
+                                <option key={y} value={y}>Últimos {y} años</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={useMemo(() => {
+                                const currentYear = new Date().getFullYear();
+                                const currentMonth = new Date().getMonth();
+                                const currentDay = new Date().getDate();
+                                const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
+
+                                return years.map(year => {
+                                    const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
+                                    // End date is the same day/month but for the specific year
+                                    const endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
+
+                                    const periodTrans = transactions.filter(t =>
+                                        t.date >= startStr && t.date <= endStr && t.status === 'paid'
+                                    );
+
+                                    const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                    const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+                                    return {
+                                        year: year.toString(),
+                                        Ingresos: income,
+                                        Gastos: expense,
+                                        Neto: income - expense
+                                    };
+                                });
+                            }, [yearsToCompare, transactions])}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="year" axisLine={false} tickLine={false} />
+                                <YAxis axisLine={false} tickLine={false} />
+                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                <Legend />
+                                <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            </section>
+
+            <div className="border-t border-slate-200"></div>
+
+            {/* Section 4: Expense History */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
 
