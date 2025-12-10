@@ -115,6 +115,7 @@ const Transactions = () => {
                         <option value="Transferencia">Transferencia</option>
                         <option value="Bizum">Bizum</option>
                         <option value="Web">Web</option>
+                        <option value="General">General (Histórico)</option>
                     </select>
 
                     <DateRangePicker />
