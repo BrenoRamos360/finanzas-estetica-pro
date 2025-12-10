@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line } from 'recharts';
-import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line, LabelList } from 'recharts';
+import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar, Plus, Trash2 } from 'lucide-react';
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -139,6 +139,58 @@ const Comparisons = () => { // Updated
             };
         });
     }, [monthlyEvolutionMonths, transactions]);
+
+    // --- Flexible Stacked Comparison Logic ---
+    const [flexibleCharts, setFlexibleCharts] = useState([
+        { id: 1, year: new Date().getFullYear(), metric: 'income' },
+        { id: 2, year: new Date().getFullYear() - 1, metric: 'income' }
+    ]);
+
+    const addFlexibleChart = () => {
+        if (flexibleCharts.length >= 4) return;
+        const newId = Math.max(...flexibleCharts.map(c => c.id)) + 1;
+        setFlexibleCharts([...flexibleCharts, { id: newId, year: new Date().getFullYear(), metric: 'income' }]);
+    };
+
+    const removeFlexibleChart = (id) => {
+        setFlexibleCharts(flexibleCharts.filter(c => c.id !== id));
+    };
+
+    const updateFlexibleChart = (id, field, value) => {
+        setFlexibleCharts(flexibleCharts.map(c => c.id === id ? { ...c, [field]: value } : c));
+    };
+
+    const getFlexibleChartData = (year, metric) => {
+        const months = eachMonthOfInterval({
+            start: new Date(year, 0, 1),
+            end: new Date(year, 11, 31)
+        });
+
+        return months.map(month => {
+            const mStart = format(startOfMonth(month), 'yyyy-MM-dd');
+            const mEnd = format(endOfMonth(month), 'yyyy-MM-dd');
+
+            const monthTrans = transactions.filter(t =>
+                t.date >= mStart && t.date <= mEnd && t.status === 'paid'
+            );
+
+            let value = 0;
+            if (metric === 'income') {
+                value = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            } else if (metric === 'expense') {
+                value = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+            } else {
+                const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                value = income - expense;
+            }
+
+            return {
+                name: format(month, 'MMM', { locale: es }),
+                value: Number(value.toFixed(2))
+            };
+        });
+    };
 
     // --- Expense History Logic ---
     const [historyType, setHistoryType] = useState('description'); // 'description' or 'category'
@@ -492,7 +544,81 @@ const Comparisons = () => { // Updated
 
             <div className="border-t border-slate-200"></div>
 
-            {/* Section 5: Expense History */}
+            {/* Section 5: Flexible Stacked Comparison (Playground) */}
+            <section className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-800">Comparador Flexible (Playground)</h2>
+                        <p className="text-sm text-gray-500">Añade gráficos para comparar años y métricas libremente.</p>
+                    </div>
+                    <button
+                        onClick={addFlexibleChart}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                        <Plus size={18} /> Añadir Gráfico
+                    </button>
+                </div>
+
+                <div className="space-y-6">
+                    {flexibleCharts.map((chart) => {
+                        const chartData = getFlexibleChartData(chart.year, chart.metric);
+                        const metricLabel = chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : 'Beneficio';
+                        const metricColor = chart.metric === 'income' ? '#22c55e' : chart.metric === 'expense' ? '#ef4444' : '#3b82f6';
+
+                        return (
+                            <div key={chart.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center gap-4">
+                                        <select
+                                            value={chart.year}
+                                            onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
+                                            className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {availableYears.map(year => (
+                                                <option key={year} value={year}>{year}</option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            value={chart.metric}
+                                            onChange={(e) => updateFlexibleChart(chart.id, 'metric', e.target.value)}
+                                            className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="income">Ingresos</option>
+                                            <option value="expense">Gastos</option>
+                                            <option value="profit">Beneficio</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        onClick={() => removeFlexibleChart(chart.id)}
+                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Eliminar gráfico"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </div>
+
+                                <div className="h-64">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                            <Bar dataKey="value" name={metricLabel} fill={metricColor} radius={[4, 4, 0, 0]} barSize={40}>
+                                                <LabelList dataKey="value" position="top" style={{ fill: metricColor, fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+
+            <div className="border-t border-slate-200"></div>
+
+            {/* Section 6: Expense History */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
 
