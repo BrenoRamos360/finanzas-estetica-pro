@@ -402,95 +402,117 @@ const Comparisons = () => { // Updated
                                                 Neto: income - expense
                                             };
                                         });
-                                        <div className="border-t border-slate-200"></div>
+                                    }, [yearsToCompare, annualMode, transactions])}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="year" axisLine={false} tickLine={false} />
+                                        <YAxis axisLine={false} tickLine={false} />
+                                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                        <Legend />
 
-                                        {/* Section 4: Expense History */ }
-                                        <section className="space-y-6">
-                                            <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
+                                        {(annualMetric === 'all' || annualMetric === 'income') && (
+                                            <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                        )}
+                                        {(annualMetric === 'all' || annualMetric === 'expense') && (
+                                            <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                        )}
+                                        {(annualMetric === 'net') && (
+                                            <Bar dataKey="Neto" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                        )}
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </section>
 
-                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-end">
-                                                <div className="flex-1 w-full">
-                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Buscar por</label>
-                                                    <div className="flex bg-slate-100 p-1 rounded-lg">
-                                                        <button
-                                                            onClick={() => setHistoryType('description')}
-                                                            className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'description' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                                                        >
-                                                            Descripción
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setHistoryType('category')}
-                                                            className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'category' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
-                                                        >
-                                                            Categoría
-                                                        </button>
-                                                    </div>
-                                                </div>
+                    <div className="border-t border-slate-200"></div>
 
-                                                <div className="flex-[2] w-full">
-                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                                                        {historyType === 'description' ? 'Término de búsqueda' : 'Categoría'}
-                                                    </label>
-                                                    {historyType === 'description' ? (
-                                                        <input
-                                                            type="text"
-                                                            value={historySearch}
-                                                            onChange={(e) => setHistorySearch(e.target.value)}
-                                                            placeholder="Ej: Mercadona, Luz, Alquiler..."
-                                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                                                        />
-                                                    ) : (
-                                                        <select
-                                                            value={historyCategory}
-                                                            onChange={(e) => setHistoryCategory(e.target.value)}
-                                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                                                        >
-                                                            {(categories?.expense || []).map(cat => (
-                                                                <option key={cat} value={cat}>{cat}</option>
-                                                            ))}
-                                                        </select>
-                                                    )}
-                                                </div>
+                    {/* Section 4: Expense History */}
+                    <section className="space-y-6">
+                        <h2 className="text-2xl font-bold text-gray-800">Histórico de Gastos Específicos</h2>
 
-                                                <div className="flex-1 w-full">
-                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rango de Tiempo</label>
-                                                    <select
-                                                        value={historyMonths}
-                                                        onChange={(e) => setHistoryMonths(parseInt(e.target.value))}
-                                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
-                                                    >
-                                                        <option value={6}>Últimos 6 meses</option>
-                                                        <option value={12}>Último año</option>
-                                                        <option value={24}>Últimos 2 años</option>
-                                                        <option value={60}>Últimos 5 años</option>
-                                                        <option value={120}>Últimos 10 años</option>
-                                                    </select>
-                                                </div>
-                                            </div>
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-1 w-full">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Buscar por</label>
+                                <div className="flex bg-slate-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setHistoryType('description')}
+                                        className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'description' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Descripción
+                                    </button>
+                                    <button
+                                        onClick={() => setHistoryType('category')}
+                                        className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${historyType === 'category' ? 'bg-white shadow text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                                    >
+                                        Categoría
+                                    </button>
+                                </div>
+                            </div>
 
-                                            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                                                <div className="h-80">
-                                                    {historyData.length > 0 ? (
-                                                        <ResponsiveContainer width="100%" height="100%">
-                                                            <BarChart data={historyData}>
-                                                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                                                <YAxis axisLine={false} tickLine={false} />
-                                                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                                                <Bar dataKey="amount" name="Gasto" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                                                            </BarChart>
-                                                        </ResponsiveContainer>
-                                                    ) : (
-                                                        <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                                            <Calendar size={48} className="mb-4 opacity-50" />
-                                                            <p>Ingresa un término de búsqueda para ver el historial</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </section>
-        </div>
-                            );
+                            <div className="flex-[2] w-full">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                                    {historyType === 'description' ? 'Término de búsqueda' : 'Categoría'}
+                                </label>
+                                {historyType === 'description' ? (
+                                    <input
+                                        type="text"
+                                        value={historySearch}
+                                        onChange={(e) => setHistorySearch(e.target.value)}
+                                        placeholder="Ej: Mercadona, Luz, Alquiler..."
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                    />
+                                ) : (
+                                    <select
+                                        value={historyCategory}
+                                        onChange={(e) => setHistoryCategory(e.target.value)}
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                    >
+                                        {(categories?.expense || []).map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            <div className="flex-1 w-full">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Rango de Tiempo</label>
+                                <select
+                                    value={historyMonths}
+                                    onChange={(e) => setHistoryMonths(parseInt(e.target.value))}
+                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                                >
+                                    <option value={6}>Últimos 6 meses</option>
+                                    <option value={12}>Último año</option>
+                                    <option value={24}>Últimos 2 años</option>
+                                    <option value={60}>Últimos 5 años</option>
+                                    <option value={120}>Últimos 10 años</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <div className="h-80">
+                                {historyData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={historyData}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                            <YAxis axisLine={false} tickLine={false} />
+                                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+                                            <Bar dataKey="amount" name="Gasto" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                                        <Calendar size={48} className="mb-4 opacity-50" />
+                                        <p>Ingresa un término de búsqueda para ver el historial</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                );
 };
 
-                            export default Comparisons;
+                export default Comparisons;
