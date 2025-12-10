@@ -119,9 +119,9 @@ const Comparisons = () => { // Updated
 
             return {
                 year: year.toString(),
-                Ingresos: income,
-                Gastos: expense,
-                Neto: income - expense
+                Ingresos: Number(income.toFixed(2)),
+                Gastos: Number(expense.toFixed(2)),
+                Neto: Number((income - expense).toFixed(2))
             };
         });
     }, [selectedMonth, yearsToCompare, transactions]);
@@ -147,9 +147,9 @@ const Comparisons = () => { // Updated
 
             return {
                 name: format(month, 'MMM yy', { locale: es }),
-                Ingresos: income,
-                Gastos: expense,
-                Beneficio: income - expense
+                Ingresos: Number(income.toFixed(2)),
+                Gastos: Number(expense.toFixed(2)),
+                Beneficio: Number((income - expense).toFixed(2))
             };
         });
     }, [monthlyEvolutionMonths, transactions]);
@@ -543,9 +543,9 @@ const Comparisons = () => { // Updated
 
                                     return {
                                         year: year.toString(),
-                                        Ingresos: income,
-                                        Gastos: expense,
-                                        Neto: income - expense
+                                        Ingresos: Number(income.toFixed(2)),
+                                        Gastos: Number(expense.toFixed(2)),
+                                        Neto: Number((income - expense).toFixed(2))
                                     };
                                 });
                             }, [yearsToCompare, annualMode, transactions])}>
