@@ -156,7 +156,7 @@ const Comparisons = () => { // Updated
         <div className="space-y-12">
             {/* Section 1: Custom Period Comparison (Existing) */}
             <section className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800">Comparativa entre Periodos</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Comparativas Personalizadas (v2)</h2>
 
                 {/* Controls */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-6">
