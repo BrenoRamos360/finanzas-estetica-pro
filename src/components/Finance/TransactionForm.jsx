@@ -18,14 +18,14 @@ const TransactionForm = ({ onClose, initialDate, initialData, onEditComplete }) 
         // Validation: Amount is always required
         if (!amount) return;
 
-        // Validation: Expense requires description and category
-        if (type === 'expense' && (!description || !category)) return;
+        // Validation: Expense requires category (Description is now optional)
+        if (type === 'expense' && !category) return;
 
         const parsedAmount = parseFloat(amount.toString().replace(',', '.'));
         if (isNaN(parsedAmount) || parsedAmount <= 0) return;
 
-        // Set defaults for optional Income fields
-        const finalDescription = description || (type === 'income' ? 'Ingreso General' : description);
+        // Set defaults for optional fields
+        const finalDescription = description || (type === 'income' ? 'Ingreso General' : 'Gasto General');
         const finalCategory = category || (type === 'income' ? 'Otros' : category);
 
         const transactionData = {

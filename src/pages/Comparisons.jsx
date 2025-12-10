@@ -556,13 +556,19 @@ const Comparisons = () => { // Updated
                                 <Legend />
 
                                 {(annualMetric === 'all' || annualMetric === 'income') && (
-                                    <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]}>
+                                        <LabelList dataKey="Ingresos" position="top" style={{ fill: '#3b82f6', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
                                 )}
                                 {(annualMetric === 'all' || annualMetric === 'expense') && (
-                                    <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
+                                        <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
                                 )}
                                 {(annualMetric === 'net') && (
-                                    <Bar dataKey="Neto" fill="#10b981" radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="Neto" fill="#10b981" radius={[4, 4, 0, 0]}>
+                                        <LabelList dataKey="Neto" position="top" style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
                                 )}
                             </BarChart>
                         </ResponsiveContainer>
