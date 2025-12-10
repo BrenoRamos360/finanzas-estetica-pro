@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, LabelList } from 'recharts';
 import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, eachDayOfInterval, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, DollarSign, Activity, Wallet, Check } from 'lucide-react';
@@ -324,9 +324,15 @@ const Analytics = () => {
                             <YAxis axisLine={false} tickLine={false} />
                             <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                             <Legend />
-                            <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20} />
-                            <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
-                            <Line type="monotone" dataKey="Beneficio" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }} />
+                            <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20}>
+                                <LabelList dataKey="Ingresos" position="top" style={{ fill: '#15803d', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                            </Bar>
+                            <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20}>
+                                <LabelList dataKey="Gastos" position="top" style={{ fill: '#b91c1c', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                            </Bar>
+                            <Line type="monotone" dataKey="Beneficio" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}>
+                                <LabelList dataKey="Beneficio" position="top" offset={10} style={{ fill: '#1d4ed8', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                            </Line>
                         </ComposedChart>
                     </ResponsiveContainer>
                 </div>
