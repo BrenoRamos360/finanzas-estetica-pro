@@ -50,6 +50,11 @@ const Comparisons = () => { // Updated
         return Array.from(years).sort((a, b) => b - a);
     }, [transactions]);
 
+    // Extract unique payment methods
+    const paymentMethods = useMemo(() => {
+        return [...new Set(transactions.map(t => t.paymentMethod || 'Efectivo'))].filter(Boolean);
+    }, [transactions]);
+
     // Helper to get start/end dates and label based on mode
     const getPeriodDetails = (type, pA, pB, yA, yB, cA, cB, isB) => {
         let start, end, label;
