@@ -48,7 +48,117 @@ const Analytics = () => {
         };
     }, [filteredTransactions, dateRange]);
 
-    // ... (rest of the file until return)
+    // --- Average Profit Logic ---
+    const averageProfitData = useMemo(() => {
+        const start = parseISO(dateRange.startDate);
+        const end = parseISO(dateRange.endDate);
+        // Calculate months difference (at least 1)
+        let monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+        monthsDiff = Math.max(1, monthsDiff);
+
+        const totalProfit = kpis.savings;
+        const monthlyAverage = totalProfit / monthsDiff;
+        const quarterlyAverage = totalProfit / (monthsDiff / 3);
+
+        return {
+            monthsDiff,
+            monthlyAverage,
+            quarterlyAverage
+        };
+    }, [kpis.savings, dateRange]);
+
+    // --- Evolution Chart Data (Dynamic Grouping) ---
+    const evolutionData = useMemo(() => {
+        const start = parseISO(dateRange.startDate);
+        const end = parseISO(dateRange.endDate);
+        const daysDiff = differenceInDays(end, start);
+
+        let data = [];
+
+        if (daysDiff > 60) {
+            // Group by Month
+            const months = eachMonthOfInterval({ start, end });
+            data = months.map(month => {
+                const monthStart = format(startOfMonth(month), 'yyyy-MM-dd');
+                const monthEnd = format(endOfMonth(month), 'yyyy-MM-dd');
+
+                const monthTrans = filteredTransactions.filter(t => {
+                    return t.date >= monthStart && t.date <= monthEnd && t.status === 'paid';
+                });
+
+                const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                const profit = income - expense;
+
+                return {
+                    name: format(month, 'MMM yyyy', { locale: es }),
+                    Ingresos: Number(income.toFixed(2)),
+                    Gastos: Number(expense.toFixed(2)),
+                    Beneficio: Number(profit.toFixed(2))
+                };
+            });
+        } else {
+            // Group by Day
+            const days = eachDayOfInterval({ start, end });
+            data = days.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const dayTrans = filteredTransactions.filter(t => t.date === dateStr && t.status === 'paid');
+
+                const income = dayTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                const expense = dayTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                const profit = income - expense;
+
+                return {
+                    name: format(day, 'dd MMM', { locale: es }),
+                    Ingresos: Number(income.toFixed(2)),
+                    Gastos: Number(expense.toFixed(2)),
+                    Beneficio: Number(profit.toFixed(2))
+                };
+            });
+        }
+        return data;
+    }, [filteredTransactions, dateRange]);
+
+    // --- Category Breakdown Data ---
+    const categoryData = useMemo(() => {
+        const expenses = filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid');
+        const byCategory = expenses.reduce((acc, curr) => {
+            const cat = curr.category || 'Otros';
+            acc[cat] = (acc[cat] || 0) + curr.amount;
+            return acc;
+        }, {});
+
+        return Object.keys(byCategory)
+            .map(key => ({ name: key, value: byCategory[key] }))
+            .sort((a, b) => b.value - a.value);
+    }, [filteredTransactions]);
+
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
+
+    // --- Expense Category Analysis Data ---
+    const { categories } = useFinance();
+    const allCategories = categories?.expense || [];
+    const [selectedCategories, setSelectedCategories] = useState(allCategories);
+
+    const toggleCategory = (category) => {
+        setSelectedCategories(prev =>
+            prev.includes(category)
+                ? prev.filter(c => c !== category)
+                : [...prev, category]
+        );
+    };
+
+    const categoryAnalysisTotal = useMemo(() => {
+        return filteredTransactions
+            .filter(t => t.type === 'expense' && t.status === 'paid' && selectedCategories.includes(t.category || 'Otros'))
+            .reduce((acc, curr) => acc + curr.amount, 0);
+    }, [filteredTransactions, selectedCategories]);
+
+    const methodAnalysisTotal = useMemo(() => {
+        return filteredTransactions
+            .filter(t => t.type === 'income' && t.status === 'paid' && selectedMethods.includes(t.paymentMethod))
+            .reduce((acc, curr) => acc + curr.amount, 0);
+    }, [filteredTransactions, selectedMethods]);
 
     return (
         <div className="space-y-8">
