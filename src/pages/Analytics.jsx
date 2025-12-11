@@ -395,10 +395,10 @@ const Analytics = () => {
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-4xl font-bold">
-                                € {((kpis?.totalIncome || 0) - (kpis?.totalExpenses || 0) - (fixedExpenses || []).reduce((acc, curr) => acc + (curr.amount || 0), 0)).toFixed(2)}
+                                € {((kpis?.totalIncome || 0) - Math.max((kpis?.totalExpenses || 0), (fixedExpenses || []).reduce((acc, curr) => acc + (curr.amount || 0), 0))).toFixed(2)}
                             </span>
                             <span className="text-sm opacity-80">
-                                Facturación - (Gastos Actuales + Fijos)
+                                Facturación - Mayor entre (Gastos Reales vs Fijos)
                             </span>
                         </div>
                         <div className="mt-4 pt-4 border-t border-white/20 flex flex-col gap-2">
@@ -407,7 +407,7 @@ const Analytics = () => {
                                 <span className="font-bold">€ {(kpis?.totalIncome || 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-xs opacity-70">Gastos Actuales</span>
+                                <span className="text-xs opacity-70">Gastos Reales</span>
                                 <span className="font-bold">€ {(kpis?.totalExpenses || 0).toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between items-center">
