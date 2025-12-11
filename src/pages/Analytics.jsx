@@ -349,61 +349,6 @@ const Analytics = () => {
                     <h3 className="text-2xl font-bold text-red-600">€ {(kpis?.totalExpenses || 0).toFixed(0)}</h3>
                 </div>
 
-                {/* Profitability Forecast Section */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white relative overflow-hidden">
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-2 mb-2 opacity-90">
-                                <Activity size={20} />
-                                <span className="text-sm font-medium uppercase tracking-wider">Previsión de Rentabilidad</span>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <span className="text-4xl font-bold">
-                                    € {((kpis?.totalIncome || 0) - (fixedExpenses || []).reduce((acc, curr) => acc + (curr.amount || 0), 0)).toFixed(2)}
-                                </span>
-                                <span className="text-sm opacity-80">
-                                    Basado en facturación actual - gastos fijos
-                                </span>
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 gap-4">
-                                <div>
-                                    <span className="text-xs opacity-70 block mb-1">Facturación Actual</span>
-                                    <span className="font-bold text-lg">€ {(kpis?.totalIncome || 0).toFixed(2)}</span>
-                                </div>
-                                <div>
-                                    <span className="text-xs opacity-70 block mb-1">Gastos Fijos Est.</span>
-                                    <span className="font-bold text-lg">€ {(fixedExpenses || []).reduce((acc, curr) => acc + (curr.amount || 0), 0).toFixed(2)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        {/* Decorative background elements */}
-                        <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-400/20 rounded-full blur-xl"></div>
-                    </div>
-
-                    {/* Average Profit Cards (Existing) */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                                <TrendingUp size={20} />
-                            </div>
-                            <span className="text-sm font-bold text-slate-400 uppercase">Media Mensual (Beneficio)</span>
-                        </div>
-                        <span className="text-3xl font-bold text-slate-700">€ {(averageProfitData?.monthlyAverage || 0).toFixed(2)}</span>
-                        <p className="text-xs text-slate-400 mt-2">Promedio de beneficio neto por mes</p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                                <TrendingUp size={20} />
-                            </div>
-                            <span className="text-sm font-bold text-slate-400 uppercase">Media Trimestral (Est.)</span>
-                        </div>
-                        <span className="text-3xl font-bold text-slate-700">€ {(averageProfitData?.quarterlyAverage || 0).toFixed(2)}</span>
-                        <p className="text-xs text-slate-400 mt-2">Proyección basada en media mensual</p>
-                    </div>
-                </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Activity size={20} /></div>
