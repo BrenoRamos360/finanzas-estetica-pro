@@ -370,7 +370,7 @@ const Comparisons = () => { // Updated
                                 >
                                     <option value="total_income">Facturación Total</option>
                                     <option value="total_expense">Gastos Totales</option>
-                                    <option value="net_income">Beneficio Neto (Efectivo)</option>
+                                    <option value="net_income">Beneficio Neto</option>
                                 </select>
                             ) : (
                                 <select
