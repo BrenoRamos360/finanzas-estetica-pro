@@ -651,9 +651,9 @@ const Comparisons = () => { // Updated
                             className="px-4 py-2 border border-gray-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="all">Ingresos y Gastos</option>
-                            <option value="income">Solo Ingresos</option>
-                            <option value="expense">Solo Gastos</option>
-                            <option value="net">Beneficio Neto</option>
+                            <option value="total_income">Facturación Total</option>
+                            <option value="total_expense">Gastos Totales</option>
+                            <option value="net_income">Beneficio Neto</option>
                         </select>
 
                         {/* Years Selector */}
