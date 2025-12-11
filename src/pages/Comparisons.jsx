@@ -1043,63 +1043,67 @@ const Comparisons = () => { // Updated
                 <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="h-64 md:h-80 lg:h-96">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={useMemo(() => {
-                                const currentYear = new Date().getFullYear();
-                                const currentMonth = new Date().getMonth();
-                                const currentDay = new Date().getDate();
-                                const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
+                            <BarChart
+                                key={`${yearsToCompare}-${annualMode}-${annualMetric}`}
+                                data={useMemo(() => {
+                                    const currentYear = new Date().getFullYear();
+                                    const currentMonth = new Date().getMonth();
+                                    const currentDay = new Date().getDate();
+                                    const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
 
-                                return years.map(year => {
-                                    const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
-                                    let endStr;
+                                    return years.map(year => {
+                                        const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
+                                        let endStr;
 
-                                    if (annualMode === 'ytd') {
-                                        // End date is today's day/month in that year
-                                        endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
-                                    } else {
-                                        // End date is Dec 31st of that year
-                                        endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
-                                    }
+                                        if (annualMode === 'ytd') {
+                                            // End date is today's day/month in that year
+                                            endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
+                                        } else {
+                                            // End date is Dec 31st of that year
+                                            endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
+                                        }
 
-                                    const periodTrans = transactions.filter(t =>
-                                        t.date >= startStr && t.date <= endStr && t.status === 'paid'
-                                    );
+                                        const periodTrans = transactions.filter(t =>
+                                            t.date >= startStr && t.date <= endStr && t.status === 'paid'
+                                        );
 
-                                    const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                    const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
-                                    const prevYear = year - 1;
-                                    const prevStartStr = format(new Date(prevYear, 0, 1), 'yyyy-MM-dd');
-                                    let prevEndStr;
+                                        const prevYear = year - 1;
+                                        const prevStartStr = format(new Date(prevYear, 0, 1), 'yyyy-MM-dd');
+                                        let prevEndStr;
 
-                                    if (annualMode === 'ytd') {
-                                        prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
-                                    } else {
-                                        prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
-                                    }
+                                        if (annualMode === 'ytd') {
+                                            prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
+                                        } else {
+                                            prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
+                                        }
 
-                                    const prevPeriodTrans = transactions.filter(t =>
-                                        t.date >= prevStartStr && t.date <= prevEndStr && t.status === 'paid'
-                                    );
+                                        const prevPeriodTrans = transactions.filter(t =>
+                                            t.date >= prevStartStr && t.date <= prevEndStr && t.status === 'paid'
+                                        );
 
-                                    const prevIncome = prevPeriodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                    const prevExpense = prevPeriodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const prevIncome = prevPeriodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const prevExpense = prevPeriodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
-                                    const calculateGrowth = (current, previous) => {
-                                        if (previous === 0) return null;
-                                        return Number((((current - previous) / previous) * 100).toFixed(1));
-                                    };
+                                        const calculateGrowth = (current, previous) => {
+                                            if (previous === 0) return null;
+                                            return Number((((current - previous) / previous) * 100).toFixed(1));
+                                        };
 
-                                    return {
-                                        year: year.toString(),
-                                        Ingresos: Number(income.toFixed(2)),
-                                        Gastos: Number(expense.toFixed(2)),
-                                        Neto: Number((income - expense).toFixed(2)),
-                                        growthIngresos: calculateGrowth(income, prevIncome),
-                                        growthGastos: calculateGrowth(expense, prevExpense)
-                                    };
-                                });
-                            }, [yearsToCompare, annualMode, transactions])} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                                        return {
+                                            year: year.toString(),
+                                            Ingresos: Number(income.toFixed(2)),
+                                            Gastos: Number(expense.toFixed(2)),
+                                            Neto: Number((income - expense).toFixed(2)),
+                                            growthIngresos: calculateGrowth(income, prevIncome),
+                                            growthGastos: calculateGrowth(expense, prevExpense)
+                                        };
+                                    });
+                                }, [yearsToCompare, annualMode, transactions])}
+                                margin={{ top: 40, right: 30, left: 20, bottom: 5 }}
+                            >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="year" axisLine={false} tickLine={false} />
                                 <YAxis axisLine={false} tickLine={false} />
