@@ -1085,12 +1085,12 @@ const Comparisons = () => { // Updated
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
 
-                                {(annualMetric === 'all' || annualMetric === 'income') && (
+                                {(annualMetric === 'all' || annualMetric === 'total_income') && (
                                     <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]}>
                                         <LabelList dataKey="Ingresos" content={<CustomBarLabel />} />
                                     </Bar>
                                 )}
-                                {(annualMetric === 'all' || annualMetric === 'expense') && (
+                                {(annualMetric === 'all' || annualMetric === 'total_expense') && (
                                     <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
                                         <LabelList dataKey="Gastos" content={<CustomBarLabel />} />
                                     </Bar>
