@@ -50,6 +50,223 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
+const FlexibleChartItem = ({ chart, transactions, categories, paymentMethods, availableYears, updateFlexibleChart, removeFlexibleChart }) => {
+    // Calculate data based on chart configuration
+    const chartData = useMemo(() => {
+        const months = Array.from({ length: 12 }, (_, i) => i);
+        return months.map(monthIndex => {
+            const date = new Date(chart.year, monthIndex, 1);
+            const monthName = format(date, 'MMM', { locale: es });
+            const startStr = format(date, 'yyyy-MM-01');
+            const endStr = format(endOfMonth(date), 'yyyy-MM-dd');
+
+            const periodTrans = transactions.filter(t =>
+                t.date >= startStr && t.date <= endStr && t.status === 'paid'
+            );
+
+            const dataPoint = { name: monthName };
+
+            // Calculate Income Data
+            if (chart.showIncome) {
+                const totalIncome = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+
+                let specific = 0;
+                let hasFilter = false;
+
+                if (chart.incomeFilterType === 'method' && chart.incomePaymentMethod) {
+                    specific = periodTrans
+                        .filter(t => t.type === 'income' && (t.paymentMethod || 'Efectivo') === chart.incomePaymentMethod)
+                        .reduce((acc, curr) => acc + curr.amount, 0);
+                    hasFilter = true;
+                } else if (chart.incomeFilterType !== 'method' && chart.incomeCategory) {
+                    specific = periodTrans
+                        .filter(t => t.type === 'income' && (t.category || 'Otros') === chart.incomeCategory)
+                        .reduce((acc, curr) => acc + curr.amount, 0);
+                    hasFilter = true;
+                }
+
+                if (hasFilter) {
+                    dataPoint.incomeSpecific = Number(specific.toFixed(2));
+                    dataPoint.incomeRemainder = Number((totalIncome - specific).toFixed(2));
+                    dataPoint.incomeTotal = Number(totalIncome.toFixed(2));
+                } else {
+                    dataPoint.income = Number(totalIncome.toFixed(2));
+                }
+            }
+
+            // Calculate Expense Data
+            if (chart.showExpense) {
+                const totalExpense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                if (chart.expenseCategory) {
+                    const specific = periodTrans
+                        .filter(t => t.type === 'expense' && (t.category || 'Otros') === chart.expenseCategory)
+                        .reduce((acc, curr) => acc + curr.amount, 0);
+                    dataPoint.expenseSpecific = Number(specific.toFixed(2));
+                    dataPoint.expenseRemainder = Number((totalExpense - specific).toFixed(2));
+                    dataPoint.expenseTotal = Number(totalExpense.toFixed(2)); // For tooltip/reference
+                } else {
+                    dataPoint.expense = Number(totalExpense.toFixed(2));
+                }
+            }
+
+            return dataPoint;
+        });
+    }, [chart, transactions]);
+
+    return (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                <div className="flex flex-wrap items-center gap-6">
+                    {/* Year Selector */}
+                    <select
+                        value={chart.year}
+                        onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
+                        className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                        {availableYears.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
+
+                    {/* Income Controls */}
+                    <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
+                            <input
+                                type="checkbox"
+                                checked={chart.showIncome}
+                                onChange={(e) => updateFlexibleChart(chart.id, 'showIncome', e.target.checked)}
+                                className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                            />
+                            <span className="text-sm font-bold text-green-700">Ingresos</span>
+                        </label>
+
+                        {chart.showIncome && (
+                            <div className="flex items-center gap-1">
+                                <select
+                                    value={chart.incomeFilterType || 'category'}
+                                    onChange={(e) => updateFlexibleChart(chart.id, 'incomeFilterType', e.target.value)}
+                                    className="px-2 py-1.5 border border-green-200 bg-green-50/50 rounded-lg text-xs font-bold text-green-800 focus:outline-none focus:ring-1 focus:ring-green-500"
+                                >
+                                    <option value="category">Categoría</option>
+                                    <option value="method">Método</option>
+                                </select>
+
+                                {chart.incomeFilterType === 'method' ? (
+                                    <select
+                                        value={chart.incomePaymentMethod || ''}
+                                        onChange={(e) => updateFlexibleChart(chart.id, 'incomePaymentMethod', e.target.value)}
+                                        className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
+                                    >
+                                        <option value="">Todo</option>
+                                        {paymentMethods.map(method => (
+                                            <option key={method} value={method}>{method}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <select
+                                        value={chart.incomeCategory || ''}
+                                        onChange={(e) => updateFlexibleChart(chart.id, 'incomeCategory', e.target.value)}
+                                        className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
+                                    >
+                                        <option value="">Todo</option>
+                                        {categories?.income?.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Expense Controls */}
+                    <div className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
+                            <input
+                                type="checkbox"
+                                checked={chart.showExpense}
+                                onChange={(e) => updateFlexibleChart(chart.id, 'showExpense', e.target.checked)}
+                                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                            />
+                            <span className="text-sm font-bold text-red-700">Gastos</span>
+                        </label>
+                        {chart.showExpense && (
+                            <select
+                                value={chart.expenseCategory || ''}
+                                onChange={(e) => updateFlexibleChart(chart.id, 'expenseCategory', e.target.value)}
+                                className="px-2 py-1.5 border border-red-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-red-500 max-w-[120px]"
+                            >
+                                <option value="">Todo</option>
+                                {categories?.expense?.map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => removeFlexibleChart(chart.id)}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                    title="Eliminar gráfico"
+                >
+                    <Trash2 size={18} />
+                </button>
+            </div>
+
+            <div className="h-56 md:h-64 lg:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
+                        data={chartData}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                        <YAxis axisLine={false} tickLine={false} />
+                        <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
+
+                        {/* Income Bars */}
+                        {chart.showIncome && (
+                            (chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory) ? (
+                                <>
+                                    <Bar dataKey="incomeSpecific" name={chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory} stackId="income" fill="#16a34a" radius={[0, 0, 4, 4]} barSize={30}>
+                                        <LabelList dataKey="incomeSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
+                                    <Bar dataKey="incomeRemainder" name="Otros Ingresos" stackId="income" fill="#bbf7d0" radius={[4, 4, 0, 0]} barSize={30}>
+                                        <LabelList dataKey="incomeRemainder" position="top" style={{ fill: '#16a34a', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
+                                </>
+                            ) : (
+                                <Bar dataKey="income" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={30}>
+                                    <LabelList dataKey="income" position="top" style={{ fill: '#22c55e', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
+                            )
+                        )}
+
+                        {/* Expense Bars */}
+                        {chart.showExpense && (
+                            chart.expenseCategory ? (
+                                <>
+                                    <Bar dataKey="expenseSpecific" name={chart.expenseCategory} stackId="expense" fill="#dc2626" radius={[0, 0, 4, 4]} barSize={30}>
+                                        <LabelList dataKey="expenseSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
+                                    <Bar dataKey="expenseRemainder" name="Otros Gastos" stackId="expense" fill="#fecaca" radius={[4, 4, 0, 0]} barSize={30}>
+                                        <LabelList dataKey="expenseRemainder" position="top" style={{ fill: '#dc2626', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Bar>
+                                </>
+                            ) : (
+                                <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30}>
+                                    <LabelList dataKey="expense" position="top" style={{ fill: '#ef4444', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                </Bar>
+                            )
+                        )}
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+    );
+};
+
 const Comparisons = () => { // Updated
     const { transactions, categories } = useFinance();
 
@@ -130,7 +347,7 @@ const Comparisons = () => { // Updated
     const labelB = periodBDetails.label;
 
     // Helper to calculate value for a period and metric
-    const calculateValue = (start, end, metric) => {
+    const calculateValue = React.useCallback((start, end, metric) => {
         const periodTrans = transactions.filter(t =>
             t.date >= start && t.date <= end && t.status === 'paid'
         );
@@ -159,7 +376,7 @@ const Comparisons = () => { // Updated
                 .reduce((acc, curr) => acc + curr.amount, 0);
         }
         return 0;
-    };
+    }, [transactions]);
 
     const valueA = useMemo(() => calculateValue(periodADetails.start, periodADetails.end, metricType), [periodADetails, metricType, transactions]);
     const valueB = useMemo(() => calculateValue(periodBDetails.start, periodBDetails.end, metricType), [periodBDetails, metricType, transactions]);
@@ -277,37 +494,6 @@ const Comparisons = () => { // Updated
         setFlexibleCharts(flexibleCharts.map(c => c.id === id ? { ...c, [field]: value } : c));
     };
 
-    const getFlexibleChartData = (year, metric) => {
-        const months = eachMonthOfInterval({
-            start: new Date(year, 0, 1),
-            end: new Date(year, 11, 31)
-        });
-
-        return months.map(month => {
-            const mStart = format(startOfMonth(month), 'yyyy-MM-dd');
-            const mEnd = format(endOfMonth(month), 'yyyy-MM-dd');
-
-            const monthTrans = transactions.filter(t =>
-                t.date >= mStart && t.date <= mEnd && t.status === 'paid'
-            );
-
-            let value = 0;
-            if (metric === 'income') {
-                value = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-            } else if (metric === 'expense') {
-                value = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-            } else {
-                const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-                value = income - expense;
-            }
-
-            return {
-                name: format(month, 'MMM', { locale: es }),
-                value: Number(value.toFixed(2))
-            };
-        });
-    };
 
     // --- Master Comparison Overlay Logic ---
     const [overlayYears, setOverlayYears] = useState([new Date().getFullYear(), new Date().getFullYear() - 1]);
@@ -877,222 +1063,18 @@ const Comparisons = () => { // Updated
                 </div>
 
                 <div className="space-y-6">
-                    {flexibleCharts.map((chart) => {
-                        // Calculate data based on chart configuration
-                        const chartData = useMemo(() => {
-                            const months = Array.from({ length: 12 }, (_, i) => i);
-                            return months.map(monthIndex => {
-                                const date = new Date(chart.year, monthIndex, 1);
-                                const monthName = format(date, 'MMM', { locale: es });
-                                const startStr = format(date, 'yyyy-MM-01');
-                                const endStr = format(endOfMonth(date), 'yyyy-MM-dd');
-
-                                const periodTrans = transactions.filter(t =>
-                                    t.date >= startStr && t.date <= endStr && t.status === 'paid'
-                                );
-
-                                const dataPoint = { name: monthName };
-
-                                // Calculate Income Data
-                                if (chart.showIncome) {
-                                    const totalIncome = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-
-                                    let specific = 0;
-                                    let hasFilter = false;
-
-                                    if (chart.incomeFilterType === 'method' && chart.incomePaymentMethod) {
-                                        specific = periodTrans
-                                            .filter(t => t.type === 'income' && (t.paymentMethod || 'Efectivo') === chart.incomePaymentMethod)
-                                            .reduce((acc, curr) => acc + curr.amount, 0);
-                                        hasFilter = true;
-                                    } else if (chart.incomeFilterType !== 'method' && chart.incomeCategory) {
-                                        specific = periodTrans
-                                            .filter(t => t.type === 'income' && (t.category || 'Otros') === chart.incomeCategory)
-                                            .reduce((acc, curr) => acc + curr.amount, 0);
-                                        hasFilter = true;
-                                    }
-
-                                    if (hasFilter) {
-                                        dataPoint.incomeSpecific = Number(specific.toFixed(2));
-                                        dataPoint.incomeRemainder = Number((totalIncome - specific).toFixed(2));
-                                        dataPoint.incomeTotal = Number(totalIncome.toFixed(2));
-                                    } else {
-                                        dataPoint.income = Number(totalIncome.toFixed(2));
-                                    }
-                                }
-
-                                // Calculate Expense Data
-                                if (chart.showExpense) {
-                                    const totalExpense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
-                                    if (chart.expenseCategory) {
-                                        const specific = periodTrans
-                                            .filter(t => t.type === 'expense' && (t.category || 'Otros') === chart.expenseCategory)
-                                            .reduce((acc, curr) => acc + curr.amount, 0);
-                                        dataPoint.expenseSpecific = Number(specific.toFixed(2));
-                                        dataPoint.expenseRemainder = Number((totalExpense - specific).toFixed(2));
-                                        dataPoint.expenseTotal = Number(totalExpense.toFixed(2)); // For tooltip/reference
-                                    } else {
-                                        dataPoint.expense = Number(totalExpense.toFixed(2));
-                                    }
-                                }
-
-                                return dataPoint;
-                            });
-                        }, [chart, transactions]);
-
-                        return (
-                            <div key={chart.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
-                                    <div className="flex flex-wrap items-center gap-6">
-                                        {/* Year Selector */}
-                                        <select
-                                            value={chart.year}
-                                            onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
-                                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            {availableYears.map(year => (
-                                                <option key={year} value={year}>{year}</option>
-                                            ))}
-                                        </select>
-
-                                        {/* Income Controls */}
-                                        <div className="flex items-center gap-2">
-                                            <label className="flex items-center gap-2 cursor-pointer bg-green-50 px-3 py-1.5 rounded-lg border border-green-100">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={chart.showIncome}
-                                                    onChange={(e) => updateFlexibleChart(chart.id, 'showIncome', e.target.checked)}
-                                                    className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                                                />
-                                                <span className="text-sm font-bold text-green-700">Ingresos</span>
-                                            </label>
-
-                                            {chart.showIncome && (
-                                                <div className="flex items-center gap-1">
-                                                    <select
-                                                        value={chart.incomeFilterType || 'category'}
-                                                        onChange={(e) => updateFlexibleChart(chart.id, 'incomeFilterType', e.target.value)}
-                                                        className="px-2 py-1.5 border border-green-200 bg-green-50/50 rounded-lg text-xs font-bold text-green-800 focus:outline-none focus:ring-1 focus:ring-green-500"
-                                                    >
-                                                        <option value="category">Categoría</option>
-                                                        <option value="method">Método</option>
-                                                    </select>
-
-                                                    {chart.incomeFilterType === 'method' ? (
-                                                        <select
-                                                            value={chart.incomePaymentMethod || ''}
-                                                            onChange={(e) => updateFlexibleChart(chart.id, 'incomePaymentMethod', e.target.value)}
-                                                            className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
-                                                        >
-                                                            <option value="">Todo</option>
-                                                            {paymentMethods.map(method => (
-                                                                <option key={method} value={method}>{method}</option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <select
-                                                            value={chart.incomeCategory || ''}
-                                                            onChange={(e) => updateFlexibleChart(chart.id, 'incomeCategory', e.target.value)}
-                                                            className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
-                                                        >
-                                                            <option value="">Todo</option>
-                                                            {categories?.income?.map(cat => (
-                                                                <option key={cat} value={cat}>{cat}</option>
-                                                            ))}
-                                                        </select>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Expense Controls */}
-                                        <div className="flex items-center gap-2">
-                                            <label className="flex items-center gap-2 cursor-pointer bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={chart.showExpense}
-                                                    onChange={(e) => updateFlexibleChart(chart.id, 'showExpense', e.target.checked)}
-                                                    className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
-                                                />
-                                                <span className="text-sm font-bold text-red-700">Gastos</span>
-                                            </label>
-                                            {chart.showExpense && (
-                                                <select
-                                                    value={chart.expenseCategory || ''}
-                                                    onChange={(e) => updateFlexibleChart(chart.id, 'expenseCategory', e.target.value)}
-                                                    className="px-2 py-1.5 border border-red-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-red-500 max-w-[120px]"
-                                                >
-                                                    <option value="">Todo</option>
-                                                    {categories?.expense?.map(cat => (
-                                                        <option key={cat} value={cat}>{cat}</option>
-                                                    ))}
-                                                </select>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => removeFlexibleChart(chart.id)}
-                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                                        title="Eliminar gráfico"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-
-                                <div className="h-56 md:h-64 lg:h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart
-                                            key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
-                                            data={chartData}
-                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                            <YAxis axisLine={false} tickLine={false} />
-                                            <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-
-                                            {/* Income Bars */}
-                                            {chart.showIncome && (
-                                                (chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory) ? (
-                                                    <>
-                                                        <Bar dataKey="incomeSpecific" name={chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory} stackId="income" fill="#16a34a" radius={[0, 0, 4, 4]} barSize={30}>
-                                                            <LabelList dataKey="incomeSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                        </Bar>
-                                                        <Bar dataKey="incomeRemainder" name="Otros Ingresos" stackId="income" fill="#bbf7d0" radius={[4, 4, 0, 0]} barSize={30}>
-                                                            <LabelList dataKey="incomeRemainder" position="top" style={{ fill: '#16a34a', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                        </Bar>
-                                                    </>
-                                                ) : (
-                                                    <Bar dataKey="income" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={30}>
-                                                        <LabelList dataKey="income" position="top" style={{ fill: '#22c55e', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                    </Bar>
-                                                )
-                                            )}
-
-                                            {/* Expense Bars */}
-                                            {chart.showExpense && (
-                                                chart.expenseCategory ? (
-                                                    <>
-                                                        <Bar dataKey="expenseSpecific" name={chart.expenseCategory} stackId="expense" fill="#dc2626" radius={[0, 0, 4, 4]} barSize={30}>
-                                                            <LabelList dataKey="expenseSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                        </Bar>
-                                                        <Bar dataKey="expenseRemainder" name="Otros Gastos" stackId="expense" fill="#fecaca" radius={[4, 4, 0, 0]} barSize={30}>
-                                                            <LabelList dataKey="expenseRemainder" position="top" style={{ fill: '#dc2626', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                        </Bar>
-                                                    </>
-                                                ) : (
-                                                    <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30}>
-                                                        <LabelList dataKey="expense" position="top" style={{ fill: '#ef4444', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                                    </Bar>
-                                                )
-                                            )}
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </div>
-                        );
-                    })}
+                    {flexibleCharts.map((chart) => (
+                        <FlexibleChartItem
+                            key={chart.id}
+                            chart={chart}
+                            transactions={transactions}
+                            categories={categories}
+                            paymentMethods={paymentMethods}
+                            availableYears={availableYears}
+                            updateFlexibleChart={updateFlexibleChart}
+                            removeFlexibleChart={removeFlexibleChart}
+                        />
+                    ))}
                 </div>
             </section>
 
