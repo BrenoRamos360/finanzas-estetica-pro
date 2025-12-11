@@ -800,20 +800,26 @@ const Comparisons = () => { // Updated
                                 );
 
                                 let value = 0;
+                                let remainder = 0;
+                                let total = 0;
+
                                 if (chart.useCategory && chart.specificCategory) {
-                                    // Specific Category Filtering
+                                    // Specific Category Filtering (Stacked Mode)
                                     const isIncome = chart.metric === 'income';
                                     const isExpense = chart.metric === 'expense';
 
                                     if (isIncome) {
+                                        total = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
                                         value = periodTrans
                                             .filter(t => t.type === 'income' && (t.category || 'Otros') === chart.specificCategory)
                                             .reduce((acc, curr) => acc + curr.amount, 0);
                                     } else if (isExpense) {
+                                        total = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
                                         value = periodTrans
                                             .filter(t => t.type === 'expense' && (t.category || 'Otros') === chart.specificCategory)
                                             .reduce((acc, curr) => acc + curr.amount, 0);
                                     }
+                                    remainder = total - value;
                                 } else {
                                     // Standard Metrics
                                     if (chart.metric === 'income') {
@@ -827,15 +833,21 @@ const Comparisons = () => { // Updated
                                     }
                                 }
 
-                                return { name: monthName, value: Number(value.toFixed(2)) };
+                                return {
+                                    name: monthName,
+                                    value: Number(value.toFixed(2)),
+                                    remainder: Number(remainder.toFixed(2)),
+                                    total: Number((value + remainder).toFixed(2))
+                                };
                             });
                         }, [chart, transactions]);
 
                         const metricLabel = chart.useCategory && chart.specificCategory
-                            ? `${chart.specificCategory} (${chart.year})`
+                            ? chart.specificCategory
                             : chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : 'Beneficio';
 
                         const metricColor = chart.metric === 'income' ? '#22c55e' : chart.metric === 'expense' ? '#ef4444' : '#3b82f6';
+                        const remainderColor = chart.metric === 'income' ? '#bbf7d0' : chart.metric === 'expense' ? '#fecaca' : '#bfdbfe'; // Light versions
 
                         return (
                             <div key={chart.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
@@ -856,7 +868,6 @@ const Comparisons = () => { // Updated
                                                 value={chart.metric}
                                                 onChange={(e) => {
                                                     updateFlexibleChart(chart.id, 'metric', e.target.value);
-                                                    // Reset category if switching to profit (which doesn't support categories usually, or maybe it does? user asked for income/expense categories mostly)
                                                     if (e.target.value === 'profit') {
                                                         updateFlexibleChart(chart.id, 'useCategory', false);
                                                     }
@@ -876,7 +887,6 @@ const Comparisons = () => { // Updated
                                                         onChange={(e) => {
                                                             updateFlexibleChart(chart.id, 'useCategory', e.target.checked);
                                                             if (e.target.checked && !chart.specificCategory) {
-                                                                // Set default category based on metric
                                                                 const defaultCat = chart.metric === 'income'
                                                                     ? categories?.income?.[0]
                                                                     : categories?.expense?.[0];
@@ -918,9 +928,20 @@ const Comparisons = () => { // Updated
                                             <XAxis dataKey="name" axisLine={false} tickLine={false} />
                                             <YAxis axisLine={false} tickLine={false} />
                                             <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
-                                            <Bar dataKey="value" name={metricLabel} fill={metricColor} radius={[4, 4, 0, 0]} barSize={40}>
-                                                <LabelList dataKey="value" position="top" style={{ fill: metricColor, fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
-                                            </Bar>
+
+                                            {/* Stacked Bars Logic */}
+                                            {chart.useCategory ? (
+                                                <>
+                                                    <Bar dataKey="value" name={metricLabel} stackId="a" fill={metricColor} radius={[0, 0, 4, 4]} barSize={40}>
+                                                        <LabelList dataKey="value" position="center" style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                    </Bar>
+                                                    <Bar dataKey="remainder" name="Resto" stackId="a" fill={remainderColor} radius={[4, 4, 0, 0]} barSize={40} />
+                                                </>
+                                            ) : (
+                                                <Bar dataKey="value" name={metricLabel} fill={metricColor} radius={[4, 4, 0, 0]} barSize={40}>
+                                                    <LabelList dataKey="value" position="top" style={{ fill: metricColor, fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                </Bar>
+                                            )}
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
