@@ -983,13 +983,13 @@ const Comparisons = () => { // Updated
 
             <div className="border-t border-slate-200"></div>
 
-            {/* Section 3: Annual Comparison (YTD vs Full Year) */}
+            {/* Section 3: Annual Comparison (YTD vs Full Year vs Average) */}
             <section className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-800">Comparativa Anual</h2>
                         <p className="text-sm text-slate-500">
-                            Analiza el rendimiento anual. Puedes ver el año completo o solo hasta la fecha actual (YTD).
+                            Analiza el rendimiento anual. Puedes ver totales, YTD o el promedio mensual.
                         </p>
                     </div>
 
@@ -1000,13 +1000,19 @@ const Comparisons = () => { // Updated
                                 onClick={() => setAnnualMode('ytd')}
                                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${annualMode === 'ytd' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                YTD (Hasta hoy)
+                                YTD
                             </button>
                             <button
                                 onClick={() => setAnnualMode('full')}
                                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${annualMode === 'full' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
                             >
-                                Año Completo
+                                Total
+                            </button>
+                            <button
+                                onClick={() => setAnnualMode('average')}
+                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${annualMode === 'average' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Promedio Mensual
                             </button>
                         </div>
 
@@ -1042,19 +1048,25 @@ const Comparisons = () => { // Updated
                                 key={`${yearsToCompare}-${annualMode}-${annualMetric}`}
                                 data={useMemo(() => {
                                     const currentYear = new Date().getFullYear();
-                                    const currentMonth = new Date().getMonth();
+                                    const currentMonth = new Date().getMonth(); // 0-indexed
                                     const currentDay = new Date().getDate();
                                     const years = Array.from({ length: yearsToCompare }, (_, i) => currentYear - (yearsToCompare - 1) + i);
 
                                     return years.map(year => {
                                         const startStr = format(new Date(year, 0, 1), 'yyyy-MM-dd');
                                         let endStr;
+                                        let divisor = 1;
 
                                         if (annualMode === 'ytd') {
-                                            // End date is today's day/month in that year
                                             endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
+                                        } else if (annualMode === 'average') {
+                                            endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
+                                            if (year === currentYear) {
+                                                divisor = Math.max(1, currentMonth + 1);
+                                            } else {
+                                                divisor = 12;
+                                            }
                                         } else {
-                                            // End date is Dec 31st of that year
                                             endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
                                         }
 
@@ -1062,15 +1074,23 @@ const Comparisons = () => { // Updated
                                             t.date >= startStr && t.date <= endStr && t.status === 'paid'
                                         );
 
-                                        const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                        const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const incomeTotal = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const expenseTotal = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
+                                        const income = incomeTotal / divisor;
+                                        const expense = expenseTotal / divisor;
+
+                                        // Previous Year Logic for Growth
                                         const prevYear = year - 1;
                                         const prevStartStr = format(new Date(prevYear, 0, 1), 'yyyy-MM-dd');
                                         let prevEndStr;
+                                        let prevDivisor = 1;
 
                                         if (annualMode === 'ytd') {
                                             prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
+                                        } else if (annualMode === 'average') {
+                                            prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
+                                            prevDivisor = 12; // Previous year is always full 12 months for average
                                         } else {
                                             prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
                                         }
@@ -1079,8 +1099,11 @@ const Comparisons = () => { // Updated
                                             t.date >= prevStartStr && t.date <= prevEndStr && t.status === 'paid'
                                         );
 
-                                        const prevIncome = prevPeriodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                        const prevExpense = prevPeriodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const prevIncomeTotal = prevPeriodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const prevExpenseTotal = prevPeriodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+                                        const prevIncome = prevIncomeTotal / prevDivisor;
+                                        const prevExpense = prevExpenseTotal / prevDivisor;
 
                                         const calculateGrowth = (current, previous) => {
                                             if (previous === 0) return null;
