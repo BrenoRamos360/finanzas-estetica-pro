@@ -74,6 +74,17 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
             } catch (e) {
                 console.error("Invalid date range", e);
             }
+        } else if (chart.type === 'month' && chart.month) {
+            // Month Mode: Force Weekly Granularity
+            try {
+                const date = parseISO(`${chart.month}-01`);
+                const start = startOfMonth(date);
+                const end = endOfMonth(date);
+                granularity = 'week';
+                intervals = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 });
+            } catch (e) {
+                console.error("Invalid month", e);
+            }
         } else {
             // Default to Year mode (Monthly)
             intervals = Array.from({ length: 12 }, (_, i) => new Date(chart.year, i, 1));
@@ -158,10 +169,11 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
                         className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="year">Año Completo</option>
+                        <option value="month">Mes Específico</option>
                         <option value="custom">Rango Personalizado</option>
                     </select>
 
-                    {/* Year Selector or Date Range Inputs */}
+                    {/* Year Selector, Month Selector or Date Range Inputs */}
                     {chart.type === 'custom' ? (
                         <div className="flex items-center gap-2">
                             <input
@@ -178,6 +190,13 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
                                 className="px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
+                    ) : chart.type === 'month' ? (
+                        <input
+                            type="month"
+                            value={chart.month || format(new Date(), 'yyyy-MM')}
+                            onChange={(e) => updateFlexibleChart(chart.id, 'month', e.target.value)}
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
                     ) : (
                         <select
                             value={chart.year}
@@ -278,7 +297,7 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
             <div className="h-56 md:h-64 lg:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                        key={`${chart.id}-${chart.type}-${chart.year}-${chart.customRange?.start}-${chart.customRange?.end}-${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
+                        key={`${chart.id}-${chart.type}-${chart.year}-${chart.month}-${chart.customRange?.start}-${chart.customRange?.end}-${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
                         data={chartData}
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
@@ -551,6 +570,7 @@ const Comparisons = () => { // Updated
             id: newId,
             type: 'year',
             year: new Date().getFullYear(),
+            month: format(new Date(), 'yyyy-MM'),
             customRange: {
                 start: format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd'),
                 end: format(endOfMonth(new Date()), 'yyyy-MM-dd')
