@@ -9,7 +9,8 @@ const Comparisons = () => { // Updated
     const { transactions, categories } = useFinance();
 
     // State for selectors
-    const [metricType, setMetricType] = useState('total_income'); // total_income, total_expense, net_income, category_X
+    const [metricType, setMetricType] = useState('total_income'); // total_income, total_expense, net_income, cat_inc_X, cat_exp_X
+    const [useSpecificCategory, setUseSpecificCategory] = useState(false);
     const [comparisonType, setComparisonType] = useState('month'); // 'month', 'year', 'custom'
 
     // Month Mode State
@@ -30,20 +31,11 @@ const Comparisons = () => { // Updated
         end: format(subMonths(new Date(), 1), 'yyyy-MM-dd')
     });
 
-    // Helper to get available metrics
-    const metrics = useMemo(() => {
-        const baseMetrics = [
-            { id: 'total_income', label: 'Facturación Total' },
-            { id: 'total_expense', label: 'Gastos Totales' },
-            { id: 'net_income', label: 'Beneficio Neto (Efectivo)' },
-        ];
-
-        const expenseCategories = (categories?.expense || []).map(cat => ({
-            id: `cat_exp_${cat}`,
-            label: `Gasto: ${cat}`
-        }));
-
-        return [...baseMetrics, ...expenseCategories];
+    // Helper to get all categories for the dropdown
+    const allCategories = useMemo(() => {
+        const inc = (categories?.income || []).map(c => ({ id: `cat_inc_${c}`, label: c, type: 'income' }));
+        const exp = (categories?.expense || []).map(c => ({ id: `cat_exp_${c}`, label: c, type: 'expense' }));
+        return [...inc, ...exp];
     }, [categories]);
 
     // Helper to get available years from transactions
@@ -103,6 +95,12 @@ const Comparisons = () => { // Updated
             const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
             const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
             return income - expense;
+        }
+        if (metric.startsWith('cat_inc_')) {
+            const catName = metric.replace('cat_inc_', '');
+            return periodTrans
+                .filter(t => t.type === 'income' && (t.category || 'Otros') === catName)
+                .reduce((acc, curr) => acc + curr.amount, 0);
         }
         if (metric.startsWith('cat_exp_')) {
             const catName = metric.replace('cat_exp_', '');
@@ -345,16 +343,53 @@ const Comparisons = () => { // Updated
                     {/* Top Row: Metric & Type Selectors */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Métrica a Comparar</label>
-                            <select
-                                value={metricType}
-                                onChange={(e) => setMetricType(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
-                            >
-                                {metrics.map(m => (
-                                    <option key={m.id} value={m.id}>{m.label}</option>
-                                ))}
-                            </select>
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="block text-xs font-bold text-gray-500 uppercase">Métrica a Comparar</label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={useSpecificCategory}
+                                        onChange={(e) => {
+                                            setUseSpecificCategory(e.target.checked);
+                                            if (!e.target.checked) setMetricType('total_income');
+                                            else setMetricType(allCategories[0]?.id || '');
+                                        }}
+                                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                                    />
+                                    <span className="text-xs text-blue-600 font-medium hover:text-blue-700">
+                                        Filtrar por Categoría
+                                    </span>
+                                </label>
+                            </div>
+
+                            {!useSpecificCategory ? (
+                                <select
+                                    value={metricType}
+                                    onChange={(e) => setMetricType(e.target.value)}
+                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50 font-medium text-gray-700"
+                                >
+                                    <option value="total_income">Facturación Total</option>
+                                    <option value="total_expense">Gastos Totales</option>
+                                    <option value="net_income">Beneficio Neto (Efectivo)</option>
+                                </select>
+                            ) : (
+                                <select
+                                    value={metricType}
+                                    onChange={(e) => setMetricType(e.target.value)}
+                                    className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 font-medium text-blue-700"
+                                >
+                                    <optgroup label="Ingresos">
+                                        {categories?.income?.map(cat => (
+                                            <option key={`inc_${cat}`} value={`cat_inc_${cat}`}>{cat}</option>
+                                        ))}
+                                    </optgroup>
+                                    <optgroup label="Gastos">
+                                        {categories?.expense?.map(cat => (
+                                            <option key={`exp_${cat}`} value={`cat_exp_${cat}`}>{cat}</option>
+                                        ))}
+                                    </optgroup>
+                                </select>
+                            )}
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tipo de Periodo</label>
