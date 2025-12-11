@@ -212,7 +212,7 @@ const Analytics = () => {
                             <span className="text-sm font-bold text-blue-800 uppercase">Total Seleccionado</span>
                         </div>
                         <h3 className="text-3xl font-bold text-blue-900">
-                            € {methodAnalysisTotal.toFixed(2)}
+                            € {(methodAnalysisTotal || 0).toFixed(2)}
                         </h3>
                         <p className="text-xs text-blue-600 mt-2">
                             Métodos seleccionados: {selectedMethods.length}
@@ -234,7 +234,7 @@ const Analytics = () => {
                                             <div className={`w-2 h-2 rounded-full bg-blue-500`}></div>
                                             <span className="text-slate-700 font-medium">{method}</span>
                                         </div>
-                                        <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
+                                        <span className="font-bold text-slate-900">€ {(amount || 0).toFixed(2)}</span>
                                     </div>
                                 );
                             })}
@@ -279,7 +279,7 @@ const Analytics = () => {
                             <span className="text-sm font-bold text-red-800 uppercase">Total Seleccionado</span>
                         </div>
                         <h3 className="text-3xl font-bold text-red-900">
-                            € {categoryAnalysisTotal.toFixed(2)}
+                            € {(categoryAnalysisTotal || 0).toFixed(2)}
                         </h3>
                         <p className="text-xs text-red-600 mt-2">
                             Categorías seleccionadas: {selectedCategories.length}
@@ -301,7 +301,7 @@ const Analytics = () => {
                                             <div className={`w-2 h-2 rounded-full bg-red-500`}></div>
                                             <span className="text-slate-700 font-medium">{cat}</span>
                                         </div>
-                                        <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
+                                        <span className="font-bold text-slate-900">€ {(amount || 0).toFixed(2)}</span>
                                     </div>
                                 );
                             })}
@@ -325,7 +325,7 @@ const Analytics = () => {
                         <span className="text-xs bg-white/20 px-3 py-1 rounded-full text-blue-50">Ingresos - Gastos</span>
                     </div>
                     <h3 className="text-5xl font-bold text-white mb-2">
-                        € {kpis.savings.toFixed(2)}
+                        € {(kpis?.savings || 0).toFixed(2)}
                     </h3>
                     <p className="text-sm text-blue-100 opacity-90">
                         Resultado neto del periodo seleccionado
@@ -338,7 +338,7 @@ const Analytics = () => {
                         <div className="p-2 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={20} /></div>
                         <span className="text-sm font-bold text-slate-500 uppercase">Ingresos Totales</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-green-600">€ {kpis.totalIncome.toFixed(0)}</h3>
+                    <h3 className="text-2xl font-bold text-green-600">€ {(kpis?.totalIncome || 0).toFixed(0)}</h3>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -346,7 +346,7 @@ const Analytics = () => {
                         <div className="p-2 bg-red-50 text-red-600 rounded-lg"><TrendingDown size={20} /></div>
                         <span className="text-sm font-bold text-slate-500 uppercase">Gastos Totales</span>
                     </div>
-                    <h3 className="text-2xl font-bold text-red-600">€ {kpis.totalExpenses.toFixed(0)}</h3>
+                    <h3 className="text-2xl font-bold text-red-600">€ {(kpis?.totalExpenses || 0).toFixed(0)}</h3>
                 </div>
 
                 {/* Profitability Forecast Section */}
@@ -389,7 +389,7 @@ const Analytics = () => {
                             </div>
                             <span className="text-sm font-bold text-slate-400 uppercase">Media Mensual (Beneficio)</span>
                         </div>
-                        <span className="text-3xl font-bold text-slate-700">€ {averageProfitData.monthly.toFixed(2)}</span>
+                        <span className="text-3xl font-bold text-slate-700">€ {(averageProfitData?.monthlyAverage || 0).toFixed(2)}</span>
                         <p className="text-xs text-slate-400 mt-2">Promedio de beneficio neto por mes</p>
                     </div>
 
@@ -400,7 +400,7 @@ const Analytics = () => {
                             </div>
                             <span className="text-sm font-bold text-slate-400 uppercase">Media Trimestral (Est.)</span>
                         </div>
-                        <span className="text-3xl font-bold text-slate-700">€ {averageProfitData.quarterly.toFixed(2)}</span>
+                        <span className="text-3xl font-bold text-slate-700">€ {(averageProfitData?.quarterlyAverage || 0).toFixed(2)}</span>
                         <p className="text-xs text-slate-400 mt-2">Proyección basada en media mensual</p>
                     </div>
                 </div>
