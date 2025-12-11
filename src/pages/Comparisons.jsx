@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, ComposedChart, Line, LabelList, LineChart } from 'recharts';
 import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar, Plus, Trash2 } from 'lucide-react';
-import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval, differenceInDays, eachWeekOfInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 const CustomBarLabel = (props) => {
@@ -55,32 +55,50 @@ const CustomTooltip = ({ active, payload, label }) => {
 const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethods, availableYears, updateFlexibleChart, removeFlexibleChart }) => {
     // Calculate data based on chart configuration
     const chartData = useMemo(() => {
-        let months = [];
+        let intervals = [];
+        let granularity = 'month'; // 'month' or 'week'
+
         if (chart.type === 'custom' && chart.customRange?.start && chart.customRange?.end) {
             try {
                 const start = parseISO(chart.customRange.start);
                 const end = parseISO(chart.customRange.end);
                 if (start <= end) {
-                    months = eachMonthOfInterval({ start, end });
+                    const daysDiff = differenceInDays(end, start);
+                    if (daysDiff <= 60) {
+                        granularity = 'week';
+                        intervals = eachWeekOfInterval({ start, end }, { weekStartsOn: 1 }); // Monday start
+                    } else {
+                        intervals = eachMonthOfInterval({ start, end });
+                    }
                 }
             } catch (e) {
                 console.error("Invalid date range", e);
             }
         } else {
-            // Default to Year mode
-            months = Array.from({ length: 12 }, (_, i) => new Date(chart.year, i, 1));
+            // Default to Year mode (Monthly)
+            intervals = Array.from({ length: 12 }, (_, i) => new Date(chart.year, i, 1));
         }
 
-        return months.map(date => {
-            const monthName = format(date, 'MMM yy', { locale: es });
-            const startStr = format(startOfMonth(date), 'yyyy-MM-dd');
-            const endStr = format(endOfMonth(date), 'yyyy-MM-dd');
+        return intervals.map(date => {
+            let name, startStr, endStr;
+
+            if (granularity === 'week') {
+                const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+                const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+                name = `${format(weekStart, 'dd MMM', { locale: es })} - ${format(weekEnd, 'dd MMM', { locale: es })}`;
+                startStr = format(weekStart, 'yyyy-MM-dd');
+                endStr = format(weekEnd, 'yyyy-MM-dd');
+            } else {
+                name = format(date, 'MMM yy', { locale: es });
+                startStr = format(startOfMonth(date), 'yyyy-MM-dd');
+                endStr = format(endOfMonth(date), 'yyyy-MM-dd');
+            }
 
             const periodTrans = transactions.filter(t =>
                 t.date >= startStr && t.date <= endStr && t.status === 'paid'
             );
 
-            const dataPoint = { name: monthName };
+            const dataPoint = { name };
 
             // Calculate Income Data
             if (chart.showIncome) {
