@@ -7,6 +7,8 @@ import { es } from 'date-fns/locale';
 
 const CustomGrowthLabel = (props) => {
     const { x, y, width, value, index, payload } = props;
+    if (!payload) return null;
+
     const growthKey = props.dataKey === 'Ingresos' ? 'growthIngresos' : 'growthGastos';
     const growth = payload[growthKey];
 
