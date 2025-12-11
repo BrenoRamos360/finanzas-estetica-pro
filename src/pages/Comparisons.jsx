@@ -5,6 +5,51 @@ import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar, Plus, Trash2 } f
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+const CustomBarLabel = (props) => {
+    const { x, y, width, value, payload, dataKey } = props;
+    const growth = dataKey === 'Ingresos' ? payload.growthIngresos : payload.growthGastos;
+    const color = dataKey === 'Ingresos' ? '#3b82f6' : '#ef4444';
+
+    return (
+        <g>
+            {growth !== undefined && growth !== null && (
+                <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={10} fontWeight="bold">
+                    {growth > 0 ? '↑' : growth < 0 ? '↓' : ''} {Math.abs(growth)}%
+                </text>
+            )}
+            <text x={x + width / 2} y={y - 5} fill={color} textAnchor="middle" fontSize={10} fontWeight="bold">
+                {value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
+            </text>
+        </g>
+    );
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white p-3 border border-slate-100 shadow-lg rounded-lg z-50">
+                <p className="font-bold text-gray-800 mb-2">{label}</p>
+                {payload.map((entry, index) => {
+                    const growth = entry.payload[`growth${entry.name}`];
+                    return (
+                        <div key={index} className="flex items-center gap-2 text-sm mb-1">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                            <span className="text-gray-600">{entry.name}:</span>
+                            <span className="font-medium">{entry.value}</span>
+                            {growth !== undefined && growth !== null && (
+                                <span className={`text-xs font-bold ${growth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    ({growth > 0 ? '+' : ''}{growth}%)
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+    return null;
+};
+
 const Comparisons = () => { // Updated
     const { transactions, categories } = useFinance();
 
@@ -185,11 +230,29 @@ const Comparisons = () => { // Updated
             const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
             const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
+            const prevMonth = subMonths(month, 1);
+            const pmStart = format(startOfMonth(prevMonth), 'yyyy-MM-dd');
+            const pmEnd = format(endOfMonth(prevMonth), 'yyyy-MM-dd');
+
+            const prevMonthTrans = transactions.filter(t =>
+                t.date >= pmStart && t.date <= pmEnd && t.status === 'paid'
+            );
+
+            const prevIncome = prevMonthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            const prevExpense = prevMonthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+            const calculateGrowth = (current, previous) => {
+                if (previous === 0) return null;
+                return Number((((current - previous) / previous) * 100).toFixed(1));
+            };
+
             return {
                 name: format(month, 'MMM yy', { locale: es }),
                 Ingresos: Number(income.toFixed(2)),
                 Gastos: Number(expense.toFixed(2)),
-                Beneficio: Number((income - expense).toFixed(2))
+                Beneficio: Number((income - expense).toFixed(2)),
+                growthIngresos: calculateGrowth(income, prevIncome),
+                growthGastos: calculateGrowth(expense, prevExpense)
             };
         });
     }, [monthlyEvolutionMonths, transactions]);
@@ -702,11 +765,35 @@ const Comparisons = () => { // Updated
                                     const income = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
                                     const expense = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
+                                    const prevYear = year - 1;
+                                    const prevStartStr = format(new Date(prevYear, 0, 1), 'yyyy-MM-dd');
+                                    let prevEndStr;
+
+                                    if (annualMode === 'ytd') {
+                                        prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
+                                    } else {
+                                        prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
+                                    }
+
+                                    const prevPeriodTrans = transactions.filter(t =>
+                                        t.date >= prevStartStr && t.date <= prevEndStr && t.status === 'paid'
+                                    );
+
+                                    const prevIncome = prevPeriodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                    const prevExpense = prevPeriodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+                                    const calculateGrowth = (current, previous) => {
+                                        if (previous === 0) return null;
+                                        return Number((((current - previous) / previous) * 100).toFixed(1));
+                                    };
+
                                     return {
                                         year: year.toString(),
                                         Ingresos: Number(income.toFixed(2)),
                                         Gastos: Number(expense.toFixed(2)),
-                                        Neto: Number((income - expense).toFixed(2))
+                                        Neto: Number((income - expense).toFixed(2)),
+                                        growthIngresos: calculateGrowth(income, prevIncome),
+                                        growthGastos: calculateGrowth(expense, prevExpense)
                                     };
                                 });
                             }, [yearsToCompare, annualMode, transactions])} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
@@ -718,12 +805,12 @@ const Comparisons = () => { // Updated
 
                                 {(annualMetric === 'all' || annualMetric === 'income') && (
                                     <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="Ingresos" position="top" style={{ fill: '#3b82f6', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="Ingresos" content={<CustomBarLabel />} />
                                     </Bar>
                                 )}
                                 {(annualMetric === 'all' || annualMetric === 'expense') && (
                                     <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="Gastos" content={<CustomBarLabel />} />
                                     </Bar>
                                 )}
                                 {(annualMetric === 'net') && (
