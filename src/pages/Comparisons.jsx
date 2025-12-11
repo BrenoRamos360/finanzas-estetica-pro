@@ -74,10 +74,11 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
             } catch (e) {
                 console.error("Invalid date range", e);
             }
-        } else if (chart.type === 'month' && chart.month) {
+        } else if (chart.type === 'month') {
             // Month Mode: Force Weekly Granularity
             try {
-                const date = parseISO(`${chart.month}-01`);
+                const monthStr = chart.month || format(new Date(), 'yyyy-MM');
+                const date = parseISO(`${monthStr}-01`);
                 const start = startOfMonth(date);
                 const end = endOfMonth(date);
                 granularity = 'week';
