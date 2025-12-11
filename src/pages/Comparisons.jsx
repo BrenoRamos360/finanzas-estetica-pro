@@ -1057,14 +1057,25 @@ const Comparisons = () => { // Updated
                                         let endStr;
                                         let divisor = 1;
 
+                                        // Find first transaction date in this year to calculate "active months" correctly
+                                        // This handles cases where user started mid-year
+                                        const yearTrans = transactions.filter(t => t.date.startsWith(year.toString()) && t.status === 'paid');
+                                        const firstTransDate = yearTrans.length > 0
+                                            ? yearTrans.reduce((min, t) => t.date < min ? t.date : min, '9999-99-99')
+                                            : `${year}-01-01`;
+
+                                        const firstTransMonth = parseInt(firstTransDate.substring(5, 7)) - 1; // 0-indexed
+
                                         if (annualMode === 'ytd') {
                                             endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
                                         } else if (annualMode === 'average') {
                                             endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
                                             if (year === currentYear) {
-                                                divisor = Math.max(1, currentMonth + 1);
+                                                // From first transaction month until current month
+                                                divisor = Math.max(1, (currentMonth - firstTransMonth) + 1);
                                             } else {
-                                                divisor = 12;
+                                                // From first transaction month until Dec
+                                                divisor = Math.max(1, 12 - firstTransMonth);
                                             }
                                         } else {
                                             endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
@@ -1086,11 +1097,18 @@ const Comparisons = () => { // Updated
                                         let prevEndStr;
                                         let prevDivisor = 1;
 
+                                        // Find first transaction for previous year too
+                                        const prevYearTrans = transactions.filter(t => t.date.startsWith(prevYear.toString()) && t.status === 'paid');
+                                        const prevFirstTransDate = prevYearTrans.length > 0
+                                            ? prevYearTrans.reduce((min, t) => t.date < min ? t.date : min, '9999-99-99')
+                                            : `${prevYear}-01-01`;
+                                        const prevFirstTransMonth = parseInt(prevFirstTransDate.substring(5, 7)) - 1;
+
                                         if (annualMode === 'ytd') {
                                             prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
                                         } else if (annualMode === 'average') {
                                             prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
-                                            prevDivisor = 12; // Previous year is always full 12 months for average
+                                            prevDivisor = Math.max(1, 12 - prevFirstTransMonth);
                                         } else {
                                             prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
                                         }
