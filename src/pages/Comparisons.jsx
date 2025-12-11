@@ -55,11 +55,25 @@ const CustomTooltip = ({ active, payload, label }) => {
 const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethods, availableYears, updateFlexibleChart, removeFlexibleChart }) => {
     // Calculate data based on chart configuration
     const chartData = useMemo(() => {
-        const months = Array.from({ length: 12 }, (_, i) => i);
-        return months.map(monthIndex => {
-            const date = new Date(chart.year, monthIndex, 1);
-            const monthName = format(date, 'MMM', { locale: es });
-            const startStr = format(date, 'yyyy-MM-01');
+        let months = [];
+        if (chart.type === 'custom' && chart.customRange?.start && chart.customRange?.end) {
+            try {
+                const start = parseISO(chart.customRange.start);
+                const end = parseISO(chart.customRange.end);
+                if (start <= end) {
+                    months = eachMonthOfInterval({ start, end });
+                }
+            } catch (e) {
+                console.error("Invalid date range", e);
+            }
+        } else {
+            // Default to Year mode
+            months = Array.from({ length: 12 }, (_, i) => new Date(chart.year, i, 1));
+        }
+
+        return months.map(date => {
+            const monthName = format(date, 'MMM yy', { locale: es });
+            const startStr = format(startOfMonth(date), 'yyyy-MM-dd');
             const endStr = format(endOfMonth(date), 'yyyy-MM-dd');
 
             const periodTrans = transactions.filter(t =>
@@ -119,16 +133,44 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
                 <div className="flex flex-wrap items-center gap-6">
-                    {/* Year Selector */}
+                    {/* Type Selector */}
                     <select
-                        value={chart.year}
-                        onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
+                        value={chart.type || 'year'}
+                        onChange={(e) => updateFlexibleChart(chart.id, 'type', e.target.value)}
                         className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                        {availableYears.map(year => (
-                            <option key={year} value={year}>{year}</option>
-                        ))}
+                        <option value="year">Año Completo</option>
+                        <option value="custom">Rango Personalizado</option>
                     </select>
+
+                    {/* Year Selector or Date Range Inputs */}
+                    {chart.type === 'custom' ? (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="date"
+                                value={chart.customRange?.start || ''}
+                                onChange={(e) => updateFlexibleChart(chart.id, 'customRange', { ...chart.customRange, start: e.target.value })}
+                                className="px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <span className="text-slate-400">-</span>
+                            <input
+                                type="date"
+                                value={chart.customRange?.end || ''}
+                                onChange={(e) => updateFlexibleChart(chart.id, 'customRange', { ...chart.customRange, end: e.target.value })}
+                                className="px-2 py-1.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    ) : (
+                        <select
+                            value={chart.year}
+                            onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {availableYears.map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    )}
 
                     {/* Income Controls */}
                     <div className="flex items-center gap-2">
@@ -480,14 +522,25 @@ const Comparisons = () => { // Updated
 
     // --- Flexible Stacked Comparison Logic ---
     const [flexibleCharts, setFlexibleCharts] = useState([
-        { id: 1, year: new Date().getFullYear(), metric: 'income' },
-        { id: 2, year: new Date().getFullYear() - 1, metric: 'income' }
+        { id: 1, type: 'year', year: new Date().getFullYear(), metric: 'income', showIncome: true, showExpense: false },
+        { id: 2, type: 'year', year: new Date().getFullYear() - 1, metric: 'income', showIncome: true, showExpense: false }
     ]);
 
     const addFlexibleChart = () => {
         if (flexibleCharts.length >= 4) return;
         const newId = Math.max(...flexibleCharts.map(c => c.id)) + 1;
-        setFlexibleCharts([...flexibleCharts, { id: newId, year: new Date().getFullYear(), metric: 'income' }]);
+        setFlexibleCharts([...flexibleCharts, {
+            id: newId,
+            type: 'year',
+            year: new Date().getFullYear(),
+            customRange: {
+                start: format(startOfMonth(subMonths(new Date(), 6)), 'yyyy-MM-dd'),
+                end: format(endOfMonth(new Date()), 'yyyy-MM-dd')
+            },
+            metric: 'income',
+            showIncome: true,
+            showExpense: false
+        }]);
     };
 
     const removeFlexibleChart = (id) => {
