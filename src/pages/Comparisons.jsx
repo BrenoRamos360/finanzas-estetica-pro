@@ -503,11 +503,32 @@ const Comparisons = () => { // Updated
             const income = monthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
             const expense = monthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
 
+            // Calculate previous year same month for growth
+            const prevYear = year - 1;
+            const prevStart = new Date(prevYear, selectedMonth, 1);
+            const prevEnd = endOfMonth(prevStart);
+            const prevStartStr = format(prevStart, 'yyyy-MM-dd');
+            const prevEndStr = format(prevEnd, 'yyyy-MM-dd');
+
+            const prevMonthTrans = transactions.filter(t =>
+                t.date >= prevStartStr && t.date <= prevEndStr && t.status === 'paid'
+            );
+
+            const prevIncome = prevMonthTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+            const prevExpense = prevMonthTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+
+            const calculateGrowth = (current, previous) => {
+                if (previous === 0) return null;
+                return Number((((current - previous) / previous) * 100).toFixed(1));
+            };
+
             return {
                 year: year.toString(),
                 Ingresos: Number(income.toFixed(2)),
                 Gastos: Number(expense.toFixed(2)),
-                Neto: Number((income - expense).toFixed(2))
+                Neto: Number((income - expense).toFixed(2)),
+                growthIngresos: calculateGrowth(income, prevIncome),
+                growthGastos: calculateGrowth(expense, prevExpense)
             };
         });
     }, [selectedMonth, yearsToCompare, transactions]);
@@ -954,10 +975,10 @@ const Comparisons = () => { // Updated
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
                                 <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Ingresos" position="top" style={{ fill: '#22c55e', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Ingresos" content={<CustomBarLabel />} />
                                 </Bar>
                                 <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Gastos" content={<CustomBarLabel />} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
