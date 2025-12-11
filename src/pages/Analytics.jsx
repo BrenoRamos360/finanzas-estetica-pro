@@ -42,6 +42,25 @@ const Analytics = () => {
         };
     }, [filteredTransactions, dateRange]);
 
+    // --- Average Profit Logic ---
+    const averageProfitData = useMemo(() => {
+        const start = parseISO(dateRange.startDate);
+        const end = parseISO(dateRange.endDate);
+        // Calculate months difference (at least 1)
+        let monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+        monthsDiff = Math.max(1, monthsDiff);
+
+        const totalProfit = kpis.savings;
+        const monthlyAverage = totalProfit / monthsDiff;
+        const quarterlyAverage = totalProfit / (monthsDiff / 3);
+
+        return {
+            monthsDiff,
+            monthlyAverage,
+            quarterlyAverage
+        };
+    }, [kpis.savings, dateRange]);
+
     // --- Evolution Chart Data (Dynamic Grouping) ---
     const evolutionData = useMemo(() => {
         const start = parseISO(dateRange.startDate);
