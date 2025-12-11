@@ -804,13 +804,26 @@ const Comparisons = () => { // Updated
                                 // Calculate Income Data
                                 if (chart.showIncome) {
                                     const totalIncome = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
-                                    if (chart.incomeCategory) {
-                                        const specific = periodTrans
+
+                                    let specific = 0;
+                                    let hasFilter = false;
+
+                                    if (chart.incomeFilterType === 'method' && chart.incomePaymentMethod) {
+                                        specific = periodTrans
+                                            .filter(t => t.type === 'income' && (t.paymentMethod || 'Efectivo') === chart.incomePaymentMethod)
+                                            .reduce((acc, curr) => acc + curr.amount, 0);
+                                        hasFilter = true;
+                                    } else if (chart.incomeFilterType !== 'method' && chart.incomeCategory) {
+                                        specific = periodTrans
                                             .filter(t => t.type === 'income' && (t.category || 'Otros') === chart.incomeCategory)
                                             .reduce((acc, curr) => acc + curr.amount, 0);
+                                        hasFilter = true;
+                                    }
+
+                                    if (hasFilter) {
                                         dataPoint.incomeSpecific = Number(specific.toFixed(2));
                                         dataPoint.incomeRemainder = Number((totalIncome - specific).toFixed(2));
-                                        dataPoint.incomeTotal = Number(totalIncome.toFixed(2)); // For tooltip/reference
+                                        dataPoint.incomeTotal = Number(totalIncome.toFixed(2));
                                     } else {
                                         dataPoint.income = Number(totalIncome.toFixed(2));
                                     }
@@ -861,17 +874,42 @@ const Comparisons = () => { // Updated
                                                 />
                                                 <span className="text-sm font-bold text-green-700">Ingresos</span>
                                             </label>
+
                                             {chart.showIncome && (
-                                                <select
-                                                    value={chart.incomeCategory || ''}
-                                                    onChange={(e) => updateFlexibleChart(chart.id, 'incomeCategory', e.target.value)}
-                                                    className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
-                                                >
-                                                    <option value="">Todo</option>
-                                                    {categories?.income?.map(cat => (
-                                                        <option key={cat} value={cat}>{cat}</option>
-                                                    ))}
-                                                </select>
+                                                <div className="flex items-center gap-1">
+                                                    <select
+                                                        value={chart.incomeFilterType || 'category'}
+                                                        onChange={(e) => updateFlexibleChart(chart.id, 'incomeFilterType', e.target.value)}
+                                                        className="px-2 py-1.5 border border-green-200 bg-green-50/50 rounded-lg text-xs font-bold text-green-800 focus:outline-none focus:ring-1 focus:ring-green-500"
+                                                    >
+                                                        <option value="category">Categoría</option>
+                                                        <option value="method">Método</option>
+                                                    </select>
+
+                                                    {chart.incomeFilterType === 'method' ? (
+                                                        <select
+                                                            value={chart.incomePaymentMethod || ''}
+                                                            onChange={(e) => updateFlexibleChart(chart.id, 'incomePaymentMethod', e.target.value)}
+                                                            className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
+                                                        >
+                                                            <option value="">Todo</option>
+                                                            {paymentMethods.map(method => (
+                                                                <option key={method} value={method}>{method}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <select
+                                                            value={chart.incomeCategory || ''}
+                                                            onChange={(e) => updateFlexibleChart(chart.id, 'incomeCategory', e.target.value)}
+                                                            className="px-2 py-1.5 border border-green-200 bg-white rounded-lg text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-green-500 max-w-[120px]"
+                                                        >
+                                                            <option value="">Todo</option>
+                                                            {categories?.income?.map(cat => (
+                                                                <option key={cat} value={cat}>{cat}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
 
@@ -913,7 +951,7 @@ const Comparisons = () => { // Updated
                                 <div className="h-64">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart
-                                            key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.expenseCategory}`}
+                                            key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
                                             data={chartData}
                                             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                         >
@@ -924,10 +962,14 @@ const Comparisons = () => { // Updated
 
                                             {/* Income Bars */}
                                             {chart.showIncome && (
-                                                chart.incomeCategory ? (
+                                                (chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory) ? (
                                                     <>
-                                                        <Bar dataKey="incomeSpecific" name={chart.incomeCategory} stackId="income" fill="#16a34a" radius={[0, 0, 4, 4]} barSize={30} />
-                                                        <Bar dataKey="incomeRemainder" name="Otros Ingresos" stackId="income" fill="#bbf7d0" radius={[4, 4, 0, 0]} barSize={30} />
+                                                        <Bar dataKey="incomeSpecific" name={chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory} stackId="income" fill="#16a34a" radius={[0, 0, 4, 4]} barSize={30}>
+                                                            <LabelList dataKey="incomeSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                        </Bar>
+                                                        <Bar dataKey="incomeRemainder" name="Otros Ingresos" stackId="income" fill="#bbf7d0" radius={[4, 4, 0, 0]} barSize={30}>
+                                                            <LabelList dataKey="incomeRemainder" position="top" style={{ fill: '#16a34a', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                        </Bar>
                                                     </>
                                                 ) : (
                                                     <Bar dataKey="income" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={30}>
@@ -940,8 +982,12 @@ const Comparisons = () => { // Updated
                                             {chart.showExpense && (
                                                 chart.expenseCategory ? (
                                                     <>
-                                                        <Bar dataKey="expenseSpecific" name={chart.expenseCategory} stackId="expense" fill="#dc2626" radius={[0, 0, 4, 4]} barSize={30} />
-                                                        <Bar dataKey="expenseRemainder" name="Otros Gastos" stackId="expense" fill="#fecaca" radius={[4, 4, 0, 0]} barSize={30} />
+                                                        <Bar dataKey="expenseSpecific" name={chart.expenseCategory} stackId="expense" fill="#dc2626" radius={[0, 0, 4, 4]} barSize={30}>
+                                                            <LabelList dataKey="expenseSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                        </Bar>
+                                                        <Bar dataKey="expenseRemainder" name="Otros Gastos" stackId="expense" fill="#fecaca" radius={[4, 4, 0, 0]} barSize={30}>
+                                                            <LabelList dataKey="expenseRemainder" position="top" style={{ fill: '#dc2626', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                        </Bar>
                                                     </>
                                                 ) : (
                                                     <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30}>
