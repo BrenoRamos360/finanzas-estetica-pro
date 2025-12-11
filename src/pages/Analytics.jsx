@@ -7,7 +7,7 @@ import { TrendingUp, TrendingDown, DollarSign, Activity, Wallet, Check } from 'l
 import DateRangePicker from '../components/Finance/DateRangePicker';
 
 const Analytics = () => {
-    const { filteredTransactions, dateRange } = useFinance();
+    const { filteredTransactions, dateRange, fixedExpenses } = useFinance();
     const allMethods = ['Efectivo', 'Tarjeta', 'Transferencia', 'Bizum', 'Web', 'General'];
     const [selectedMethods, setSelectedMethods] = useState(allMethods);
 
@@ -359,7 +359,7 @@ const Analytics = () => {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <span className="text-4xl font-bold">
-                                    € {(totalIncome - fixedExpenses.reduce((acc, curr) => acc + curr.amount, 0)).toFixed(2)}
+                                    € {(kpis.totalIncome - fixedExpenses.reduce((acc, curr) => acc + curr.amount, 0)).toFixed(2)}
                                 </span>
                                 <span className="text-sm opacity-80">
                                     Basado en facturación actual - gastos fijos
@@ -368,7 +368,7 @@ const Analytics = () => {
                             <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 gap-4">
                                 <div>
                                     <span className="text-xs opacity-70 block mb-1">Facturación Actual</span>
-                                    <span className="font-bold text-lg">€ {totalIncome.toFixed(2)}</span>
+                                    <span className="font-bold text-lg">€ {kpis.totalIncome.toFixed(2)}</span>
                                 </div>
                                 <div>
                                     <span className="text-xs opacity-70 block mb-1">Gastos Fijos Est.</span>
