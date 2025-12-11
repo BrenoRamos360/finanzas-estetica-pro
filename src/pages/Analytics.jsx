@@ -363,7 +363,30 @@ const Analytics = () => {
                     )}
                 </div>
             </div>
-        </div >
+            {/* Section 4: Average Profit Analysis */}
+            <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 mt-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <TrendingUp className="text-blue-600" size={20} />
+                    Proyección de Beneficios
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <p className="text-sm font-bold text-blue-600 uppercase mb-1">Media Mensual</p>
+                        <p className="text-3xl font-bold text-gray-800">€ {averageProfitData.monthlyAverage.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Basado en {averageProfitData.monthsDiff} mes{averageProfitData.monthsDiff !== 1 ? 'es' : ''} seleccionados
+                        </p>
+                    </div>
+                    <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                        <p className="text-sm font-bold text-indigo-600 uppercase mb-1">Media Trimestral (Est.)</p>
+                        <p className="text-3xl font-bold text-gray-800">€ {averageProfitData.quarterlyAverage.toFixed(2)}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Proyección cada 3 meses
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
     );
 };
 
