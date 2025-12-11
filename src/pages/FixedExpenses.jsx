@@ -21,19 +21,17 @@ const FixedExpenses = () => {
     const [confirmValues, setConfirmValues] = useState({});
 
     // Initialize confirm values when fixed expenses change or month changes
-    useEffect(() => {
-        const initialValues = {};
+    // Calculate default values based on fixed expenses and selected month
+    const defaultValues = React.useMemo(() => {
+        const values = {};
         fixedExpenses.forEach(exp => {
-            // Default Date: Selected Month + (Day or 01)
             const defaultDay = exp.day ? exp.day.toString().padStart(2, '0') : '01';
-            const defaultDate = `${selectedMonth}-${defaultDay}`;
-
-            initialValues[exp.id] = {
+            values[exp.id] = {
                 amount: exp.amount,
-                date: defaultDate
+                date: `${selectedMonth}-${defaultDay}`
             };
         });
-        setConfirmValues(prev => ({ ...initialValues, ...prev }));
+        return values;
     }, [fixedExpenses, selectedMonth]);
 
     const handleSubmit = (e) => {
@@ -77,7 +75,9 @@ const FixedExpenses = () => {
     };
 
     const handleProcess = (expense) => {
-        const values = confirmValues[expense.id] || { amount: expense.amount, date: `${selectedMonth}-01` };
+        const userValue = confirmValues[expense.id] || {};
+        const defaultValue = defaultValues[expense.id] || { amount: expense.amount, date: `${selectedMonth}-01` };
+        const values = { ...defaultValue, ...userValue };
         // Pass the category to the process function if needed, or ensure processFixedExpense uses the expense's category
         // The current processFixedExpense sets category to 'Fijos', we might want to change that later or keep it generic.
         // For now, let's keep 'Fijos' as the main category for the transaction, or update FinanceContext to use the specific category.
@@ -275,7 +275,10 @@ const FixedExpenses = () => {
                                     const paidTransaction = getPaymentStatus(expense);
                                     const isPaid = !!paidTransaction;
                                     const lastMonthAmount = getLastMonthPayment(expense);
-                                    const confirmData = confirmValues[expense.id] || { amount: expense.amount, date: '' };
+
+                                    const userValue = confirmValues[expense.id] || {};
+                                    const defaultValue = defaultValues[expense.id] || { amount: expense.amount, date: '' };
+                                    const confirmData = { ...defaultValue, ...userValue };
 
                                     return (
                                         <div key={expense.id} className={`p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 transition-colors ${isPaid ? 'bg-green-50/30' : 'hover:bg-slate-50'}`}>
