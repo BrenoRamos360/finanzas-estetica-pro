@@ -786,32 +786,121 @@ const Comparisons = () => { // Updated
 
                 <div className="space-y-6">
                     {flexibleCharts.map((chart) => {
-                        const chartData = getFlexibleChartData(chart.year, chart.metric);
-                        const metricLabel = chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : 'Beneficio';
+                        // Calculate data based on chart configuration
+                        const chartData = useMemo(() => {
+                            const months = Array.from({ length: 12 }, (_, i) => i);
+                            return months.map(monthIndex => {
+                                const date = new Date(chart.year, monthIndex, 1);
+                                const monthName = format(date, 'MMM', { locale: es });
+                                const startStr = format(date, 'yyyy-MM-01');
+                                const endStr = format(endOfMonth(date), 'yyyy-MM-dd');
+
+                                const periodTrans = transactions.filter(t =>
+                                    t.date >= startStr && t.date <= endStr && t.status === 'paid'
+                                );
+
+                                let value = 0;
+                                if (chart.useCategory && chart.specificCategory) {
+                                    // Specific Category Filtering
+                                    const isIncome = chart.metric === 'income';
+                                    const isExpense = chart.metric === 'expense';
+
+                                    if (isIncome) {
+                                        value = periodTrans
+                                            .filter(t => t.type === 'income' && (t.category || 'Otros') === chart.specificCategory)
+                                            .reduce((acc, curr) => acc + curr.amount, 0);
+                                    } else if (isExpense) {
+                                        value = periodTrans
+                                            .filter(t => t.type === 'expense' && (t.category || 'Otros') === chart.specificCategory)
+                                            .reduce((acc, curr) => acc + curr.amount, 0);
+                                    }
+                                } else {
+                                    // Standard Metrics
+                                    if (chart.metric === 'income') {
+                                        value = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                    } else if (chart.metric === 'expense') {
+                                        value = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                    } else if (chart.metric === 'profit') {
+                                        const inc = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                        const exp = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                        value = inc - exp;
+                                    }
+                                }
+
+                                return { name: monthName, value: Number(value.toFixed(2)) };
+                            });
+                        }, [chart, transactions]);
+
+                        const metricLabel = chart.useCategory && chart.specificCategory
+                            ? `${chart.specificCategory} (${chart.year})`
+                            : chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : 'Beneficio';
+
                         const metricColor = chart.metric === 'income' ? '#22c55e' : chart.metric === 'expense' ? '#ef4444' : '#3b82f6';
 
                         return (
                             <div key={chart.id} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative group">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-4">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                                    <div className="flex flex-wrap items-center gap-4">
                                         <select
                                             value={chart.year}
                                             onChange={(e) => updateFlexibleChart(chart.id, 'year', parseInt(e.target.value))}
-                                            className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         >
                                             {availableYears.map(year => (
                                                 <option key={year} value={year}>{year}</option>
                                             ))}
                                         </select>
-                                        <select
-                                            value={chart.metric}
-                                            onChange={(e) => updateFlexibleChart(chart.id, 'metric', e.target.value)}
-                                            className="px-3 py-1 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        >
-                                            <option value="income">Ingresos</option>
-                                            <option value="expense">Gastos</option>
-                                            <option value="profit">Beneficio</option>
-                                        </select>
+
+                                        <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-gray-200">
+                                            <select
+                                                value={chart.metric}
+                                                onChange={(e) => {
+                                                    updateFlexibleChart(chart.id, 'metric', e.target.value);
+                                                    // Reset category if switching to profit (which doesn't support categories usually, or maybe it does? user asked for income/expense categories mostly)
+                                                    if (e.target.value === 'profit') {
+                                                        updateFlexibleChart(chart.id, 'useCategory', false);
+                                                    }
+                                                }}
+                                                className="px-3 py-1 bg-transparent text-sm font-bold text-gray-700 focus:outline-none"
+                                            >
+                                                <option value="income">Ingresos</option>
+                                                <option value="expense">Gastos</option>
+                                                <option value="profit">Beneficio</option>
+                                            </select>
+
+                                            {chart.metric !== 'profit' && (
+                                                <label className="flex items-center gap-1 px-2 border-l border-gray-200 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={chart.useCategory || false}
+                                                        onChange={(e) => {
+                                                            updateFlexibleChart(chart.id, 'useCategory', e.target.checked);
+                                                            if (e.target.checked && !chart.specificCategory) {
+                                                                // Set default category based on metric
+                                                                const defaultCat = chart.metric === 'income'
+                                                                    ? categories?.income?.[0]
+                                                                    : categories?.expense?.[0];
+                                                                updateFlexibleChart(chart.id, 'specificCategory', defaultCat || '');
+                                                            }
+                                                        }}
+                                                        className="w-3 h-3 text-blue-600 rounded"
+                                                    />
+                                                    <span className="text-xs font-medium text-slate-500">Filtrar</span>
+                                                </label>
+                                            )}
+                                        </div>
+
+                                        {chart.useCategory && chart.metric !== 'profit' && (
+                                            <select
+                                                value={chart.specificCategory || ''}
+                                                onChange={(e) => updateFlexibleChart(chart.id, 'specificCategory', e.target.value)}
+                                                className="px-3 py-2 border border-blue-200 bg-blue-50 rounded-lg text-sm font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            >
+                                                {(chart.metric === 'income' ? categories?.income : categories?.expense)?.map(cat => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => removeFlexibleChart(chart.id)}
