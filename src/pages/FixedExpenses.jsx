@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { Trash2, Plus, CheckCircle, Calendar, AlertCircle, Edit2, Save, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -22,7 +22,7 @@ const FixedExpenses = () => {
 
     // Initialize confirm values when fixed expenses change or month changes
     // Calculate default values based on fixed expenses and selected month
-    const defaultValues = React.useMemo(() => {
+    const defaultValues = useMemo(() => {
         const values = {};
         fixedExpenses.forEach(exp => {
             const defaultDay = exp.day ? exp.day.toString().padStart(2, '0') : '01';

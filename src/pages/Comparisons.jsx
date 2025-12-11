@@ -7,7 +7,9 @@ import { es } from 'date-fns/locale';
 
 const CustomBarLabel = (props) => {
     const { x, y, width, value, payload, dataKey } = props;
-    const growth = dataKey === 'Ingresos' ? payload.growthIngresos : payload.growthGastos;
+    if (!payload) return null;
+    if (!payload) return null;
+    const growth = dataKey === 'Ingresos' ? (payload.growthIngresos ?? null) : (payload.growthGastos ?? null);
     const color = dataKey === 'Ingresos' ? '#3b82f6' : '#ef4444';
 
     return (
@@ -30,7 +32,7 @@ const CustomTooltip = ({ active, payload, label }) => {
             <div className="bg-white p-3 border border-slate-100 shadow-lg rounded-lg z-50">
                 <p className="font-bold text-gray-800 mb-2">{label}</p>
                 {payload.map((entry, index) => {
-                    const growth = entry.payload[`growth${entry.name}`];
+                    const growth = (entry && entry.payload) ? entry.payload[`growth${entry.name}`] : null;
                     return (
                         <div key={index} className="flex items-center gap-2 text-sm mb-1">
                             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
@@ -50,7 +52,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     return null;
 };
 
-const FlexibleChartItem = ({ chart, transactions, categories, paymentMethods, availableYears, updateFlexibleChart, removeFlexibleChart }) => {
+const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethods, availableYears, updateFlexibleChart, removeFlexibleChart }) => {
     // Calculate data based on chart configuration
     const chartData = useMemo(() => {
         const months = Array.from({ length: 12 }, (_, i) => i);
@@ -268,7 +270,9 @@ const FlexibleChartItem = ({ chart, transactions, categories, paymentMethods, av
 };
 
 const Comparisons = () => { // Updated
-    const { transactions, categories } = useFinance();
+    const context = useFinance();
+    const transactions = context?.transactions || [];
+    const categories = context?.categories || { income: [], expense: [] };
 
     // State for selectors
     const [metricType, setMetricType] = useState('total_income'); // total_income, total_expense, net_income, cat_inc_X, cat_exp_X
@@ -306,7 +310,7 @@ const Comparisons = () => { // Updated
             const currentYear = new Date().getFullYear();
             return [currentYear, currentYear - 1];
         }
-        const years = new Set(transactions.map(t => parseInt(t.date.substring(0, 4))));
+        const years = new Set(transactions.filter(t => t.date).map(t => parseInt(t.date.substring(0, 4))));
         years.add(new Date().getFullYear());
         years.add(new Date().getFullYear() - 1);
         return Array.from(years).sort((a, b) => b - a);
@@ -378,8 +382,8 @@ const Comparisons = () => { // Updated
         return 0;
     }, [transactions]);
 
-    const valueA = useMemo(() => calculateValue(periodADetails.start, periodADetails.end, metricType), [periodADetails, metricType, transactions]);
-    const valueB = useMemo(() => calculateValue(periodBDetails.start, periodBDetails.end, metricType), [periodBDetails, metricType, transactions]);
+    const valueA = useMemo(() => calculateValue(periodADetails.start, periodADetails.end, metricType), [periodADetails, metricType, calculateValue]);
+    const valueB = useMemo(() => calculateValue(periodBDetails.start, periodBDetails.end, metricType), [periodBDetails, metricType, calculateValue]);
 
     const difference = valueB - valueA;
     const percentChange = valueA !== 0 ? ((valueB - valueA) / valueA) * 100 : (valueB > 0 ? 100 : 0);

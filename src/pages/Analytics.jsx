@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, LabelList } from 'recharts';
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths, eachDayOfInterval, differenceInDays } from 'date-fns';
+import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, differenceInDays, eachDayOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { TrendingUp, TrendingDown, DollarSign, Activity, Wallet, Check } from 'lucide-react';
 import DateRangePicker from '../components/Finance/DateRangePicker';
@@ -153,10 +153,10 @@ const Analytics = () => {
                             <button
                                 key={method}
                                 onClick={() => toggleMethod(method)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedMethods.includes(method)
+                                className={`px - 3 py - 1.5 rounded - full text - xs font - bold transition - all border flex items - center gap - 1.5 ${selectedMethods.includes(method)
                                     ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
                                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                    }`}
+                                    } `}
                             >
                                 {selectedMethods.includes(method) && <Check size={12} />}
                                 {method}
@@ -194,7 +194,7 @@ const Analytics = () => {
                                 return (
                                     <div key={method} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full bg-blue-500`}></div>
+                                            <div className={`w - 2 h - 2 rounded - full bg - blue - 500`}></div>
                                             <span className="text-slate-700 font-medium">{method}</span>
                                         </div>
                                         <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
@@ -220,10 +220,10 @@ const Analytics = () => {
                             <button
                                 key={cat}
                                 onClick={() => toggleCategory(cat)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${selectedCategories.includes(cat)
+                                className={`px - 3 py - 1.5 rounded - full text - xs font - bold transition - all border flex items - center gap - 1.5 ${selectedCategories.includes(cat)
                                     ? 'bg-red-600 text-white border-red-600 shadow-md shadow-red-200'
                                     : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-                                    }`}
+                                    } `}
                             >
                                 {selectedCategories.includes(cat) && <Check size={12} />}
                                 {cat}
@@ -261,7 +261,7 @@ const Analytics = () => {
                                 return (
                                     <div key={cat} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full bg-red-500`}></div>
+                                            <div className={`w - 2 h - 2 rounded - full bg - red - 500`}></div>
                                             <span className="text-slate-700 font-medium">{cat}</span>
                                         </div>
                                         <span className="font-bold text-slate-900">€ {amount.toFixed(2)}</span>
@@ -325,13 +325,13 @@ const Analytics = () => {
                             <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                             <Legend />
                             <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20}>
-                                <LabelList dataKey="Ingresos" position="top" style={{ fill: '#15803d', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                <LabelList dataKey="Ingresos" position="top" style={{ fill: '#15803d', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)} k` : value} />
                             </Bar>
                             <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20}>
-                                <LabelList dataKey="Gastos" position="top" style={{ fill: '#b91c1c', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                <LabelList dataKey="Gastos" position="top" style={{ fill: '#b91c1c', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)} k` : value} />
                             </Bar>
                             <Line type="monotone" dataKey="Beneficio" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}>
-                                <LabelList dataKey="Beneficio" position="top" offset={10} style={{ fill: '#1d4ed8', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                <LabelList dataKey="Beneficio" position="top" offset={10} style={{ fill: '#1d4ed8', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)} k` : value} />
                             </Line>
                         </ComposedChart>
                     </ResponsiveContainer>
@@ -351,7 +351,7 @@ const Analytics = () => {
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Bar dataKey="value" fill="#8884d8" radius={[0, 4, 4, 0]}>
                                     {categoryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        <Cell key={`cell - ${index} `} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Bar>
                             </BarChart>
