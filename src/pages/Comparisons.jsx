@@ -278,7 +278,7 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
             <div className="h-56 md:h-64 lg:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                        key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
+                        key={`${chart.id}-${chart.type}-${chart.year}-${chart.customRange?.start}-${chart.customRange?.end}-${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
                         data={chartData}
                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
