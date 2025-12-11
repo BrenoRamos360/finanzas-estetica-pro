@@ -15,11 +15,11 @@ const CustomBarLabel = (props) => {
     return (
         <g>
             {growth !== undefined && growth !== null && (
-                <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={10} fontWeight="bold">
+                <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={12} fontWeight="bold">
                     {growth > 0 ? '↑' : growth < 0 ? '↓' : ''} {Math.abs(growth)}%
                 </text>
             )}
-            <text x={x + width / 2} y={y - 5} fill={color} textAnchor="middle" fontSize={10} fontWeight="bold">
+            <text x={x + width / 2} y={y - 5} fill={color} textAnchor="middle" fontSize={12} fontWeight="bold">
                 {value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
             </text>
         </g>
@@ -232,15 +232,15 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
                             (chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory) ? (
                                 <>
                                     <Bar dataKey="incomeSpecific" name={chart.incomeFilterType === 'method' ? chart.incomePaymentMethod : chart.incomeCategory} stackId="income" fill="#16a34a" radius={[0, 0, 4, 4]} barSize={30}>
-                                        <LabelList dataKey="incomeSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="incomeSpecific" position="center" style={{ fill: '#fff', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
                                     <Bar dataKey="incomeRemainder" name="Otros Ingresos" stackId="income" fill="#bbf7d0" radius={[4, 4, 0, 0]} barSize={30}>
-                                        <LabelList dataKey="incomeRemainder" position="top" style={{ fill: '#16a34a', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="incomeRemainder" position="top" style={{ fill: '#16a34a', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
                                 </>
                             ) : (
                                 <Bar dataKey="income" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={30}>
-                                    <LabelList dataKey="income" position="top" style={{ fill: '#22c55e', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="income" position="top" style={{ fill: '#22c55e', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                             )
                         )}
@@ -250,15 +250,15 @@ const FlexibleChartItem = ({ chart, transactions = [], categories, paymentMethod
                             chart.expenseCategory ? (
                                 <>
                                     <Bar dataKey="expenseSpecific" name={chart.expenseCategory} stackId="expense" fill="#dc2626" radius={[0, 0, 4, 4]} barSize={30}>
-                                        <LabelList dataKey="expenseSpecific" position="center" style={{ fill: '#fff', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="expenseSpecific" position="center" style={{ fill: '#fff', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
                                     <Bar dataKey="expenseRemainder" name="Otros Gastos" stackId="expense" fill="#fecaca" radius={[4, 4, 0, 0]} barSize={30}>
-                                        <LabelList dataKey="expenseRemainder" position="top" style={{ fill: '#dc2626', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="expenseRemainder" position="top" style={{ fill: '#dc2626', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
                                 </>
                             ) : (
                                 <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={30}>
-                                    <LabelList dataKey="expense" position="top" style={{ fill: '#ef4444', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="expense" position="top" style={{ fill: '#ef4444', fontSize: '11px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                             )
                         )}
@@ -809,10 +809,10 @@ const Comparisons = () => { // Updated
                                 <Legend />
                                 {/* Render bars chronologically if possible, or just A then B */}
                                 <Bar dataKey={labelA} fill="#94a3b8" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey={labelA} position="top" style={{ fill: '#94a3b8', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey={labelA} position="top" style={{ fill: '#94a3b8', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                                 <Bar dataKey={labelB} fill={difference >= 0 ? '#22c55e' : '#ef4444'} radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey={labelB} position="top" style={{ fill: difference >= 0 ? '#22c55e' : '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey={labelB} position="top" style={{ fill: difference >= 0 ? '#22c55e' : '#ef4444', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -862,10 +862,10 @@ const Comparisons = () => { // Updated
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
                                 <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Ingresos" position="top" style={{ fill: '#22c55e', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Ingresos" position="top" style={{ fill: '#22c55e', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                                 <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -1005,7 +1005,7 @@ const Comparisons = () => { // Updated
                                 )}
                                 {(annualMetric === 'net') && (
                                     <Bar dataKey="Neto" fill="#10b981" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="Neto" position="top" style={{ fill: '#10b981', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="Neto" position="top" style={{ fill: '#10b981', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
                                 )}
                             </BarChart>
