@@ -79,6 +79,27 @@ const DateRangePicker = () => {
                         ))}
                     </div>
 
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Año Específico</label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {[2023, 2024, 2025, 2026].map(year => (
+                                <button
+                                    key={year}
+                                    onClick={() => {
+                                        setDateRange({
+                                            startDate: `${year}-01-01`,
+                                            endDate: `${year}-12-31`
+                                        });
+                                        setIsOpen(false);
+                                    }}
+                                    className="px-2 py-1.5 text-xs bg-gray-50 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-colors border border-gray-100"
+                                >
+                                    {year}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="space-y-3 pt-3 border-t border-gray-100">
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Desde</label>

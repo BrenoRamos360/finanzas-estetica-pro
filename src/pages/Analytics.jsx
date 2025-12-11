@@ -332,6 +332,18 @@ const Analytics = () => {
                     <h3 className="text-2xl font-bold text-blue-600">€ {kpis.savings.toFixed(0)}</h3>
                     <p className="text-xs text-slate-400 mt-1">En el periodo</p>
                 </div>
+
+                {/* Balance Card (New) */}
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><Wallet size={20} /></div>
+                        <span className="text-sm font-bold text-slate-500 uppercase">Balance del Periodo</span>
+                    </div>
+                    <h3 className={`text-2xl font-bold ${kpis.savings >= 0 ? 'text-indigo-600' : 'text-red-600'}`}>
+                        € {kpis.savings.toFixed(2)}
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">Ingresos - Gastos</p>
+                </div>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-6">Evolución Financiera y Beneficio</h3>
