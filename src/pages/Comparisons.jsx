@@ -338,7 +338,7 @@ const Comparisons = () => { // Updated
     }, [historyType, historySearch, historyCategory, historyMonths, transactions]);
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-6 lg:space-y-8">
             {/* Section 1: Custom Period Comparison (Refined) */}
             <section className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-800">Comparativa entre Periodos</h2>
@@ -599,8 +599,8 @@ const Comparisons = () => { // Updated
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
+                <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-64 md:h-80 lg:h-96">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={multiYearData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -674,8 +674,8 @@ const Comparisons = () => { // Updated
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
+                <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-64 md:h-80 lg:h-96">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={useMemo(() => {
                                 const currentYear = new Date().getFullYear();
@@ -754,8 +754,8 @@ const Comparisons = () => { // Updated
                     </select>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
+                <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-64 md:h-80 lg:h-96">
                         <ResponsiveContainer width="100%" height="100%">
                             <ComposedChart data={monthlyEvolutionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -953,7 +953,7 @@ const Comparisons = () => { // Updated
                                     </button>
                                 </div>
 
-                                <div className="h-64">
+                                <div className="h-56 md:h-64 lg:h-80">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart
                                             key={`${chart.showIncome}-${chart.showExpense}-${chart.incomeCategory}-${chart.incomePaymentMethod}-${chart.expenseCategory}`}
@@ -1137,8 +1137,8 @@ const Comparisons = () => { // Updated
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="h-80">
+                <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="h-64 md:h-80 lg:h-96">
                         {historyData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={historyData}>
