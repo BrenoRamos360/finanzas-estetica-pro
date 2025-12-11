@@ -6,16 +6,33 @@ import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInter
 import { es } from 'date-fns/locale';
 
 const CustomGrowthLabel = (props) => {
-    const { x, y, width, value, payload, dataKey } = props;
-    if (!payload) return null;
-    const growth = dataKey === 'Ingresos' ? (payload.growthIngresos ?? null) : (payload.growthGastos ?? null);
+    const { x, y, width, value, index, payload } = props;
+    const growthKey = props.dataKey === 'Ingresos' ? 'growthIngresos' : 'growthGastos';
+    const growth = payload[growthKey];
 
-    if (growth === undefined || growth === null) return null;
+    if (growth === null || growth === undefined || index === 0) return null;
 
     return (
-        <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={12} fontWeight="bold">
-            {growth > 0 ? '↑' : growth < 0 ? '↓' : ''} {Math.abs(growth)}%
+        <text x={x + width / 2} y={y + 20} fill={growth >= 0 ? "#16a34a" : "#dc2626"} textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+            {growth > 0 ? '+' : ''}{growth}%
         </text>
+    );
+};
+
+const CustomNetLabel = (props) => {
+    const { x, y, value } = props;
+
+    if (value === null || value === undefined) return null;
+
+    const formattedValue = value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value;
+
+    return (
+        <g>
+            <rect x={x - 25} y={y - 35} width="50" height="24" rx="4" fill="white" stroke="#10b981" strokeWidth="1" opacity="0.9" />
+            <text x={x} y={y - 23} fill="#10b981" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                {formattedValue}
+            </text>
+        </g>
     );
 };
 
@@ -1122,6 +1139,7 @@ const Comparisons = () => { // Updated
                                     });
                                 }, [yearsToCompare, annualMode, transactions])}
                                 margin={{ top: 40, right: 30, left: 20, bottom: 5 }}
+                                barSize={60}
                             >
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis dataKey="year" axisLine={false} tickLine={false} />
@@ -1143,8 +1161,8 @@ const Comparisons = () => { // Updated
                                 )}
                                 {/* Always show Net Profit as a Line in 'all' mode, or as a Bar in 'net' mode */}
                                 {annualMetric === 'all' && (
-                                    <Line type="monotone" dataKey="Neto" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}>
-                                        <LabelList dataKey="Neto" position="top" offset={10} style={{ fill: '#10b981', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <Line type="monotone" dataKey="Neto" stroke="#10b981" strokeWidth={4} dot={{ r: 6, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}>
+                                        <LabelList dataKey="Neto" content={<CustomNetLabel />} />
                                     </Line>
                                 )}
                                 {annualMetric === 'net_income' && (
