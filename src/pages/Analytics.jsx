@@ -137,8 +137,20 @@ const Analytics = () => {
 
     // --- Expense Category Analysis Data ---
     const { categories } = useFinance();
-    const allCategories = categories?.expense || [];
-    const [selectedCategories, setSelectedCategories] = useState(allCategories);
+
+    // Derive all unique categories from actual transactions to ensure nothing is missed
+    const allCategories = useMemo(() => {
+        const expenseTrans = filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid');
+        const uniqueCats = [...new Set(expenseTrans.map(t => t.category || 'Otros'))];
+        return uniqueCats.sort();
+    }, [filteredTransactions]);
+
+    const [selectedCategories, setSelectedCategories] = useState([]);
+
+    // Update selected categories when the available categories change (e.g. date range change)
+    React.useEffect(() => {
+        setSelectedCategories(allCategories);
+    }, [allCategories]);
 
     const toggleCategory = (category) => {
         setSelectedCategories(prev =>
