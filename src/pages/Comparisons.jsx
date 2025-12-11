@@ -5,24 +5,17 @@ import { ArrowRight, TrendingUp, TrendingDown, Minus, Calendar, Plus, Trash2 } f
 import { format, parseISO, startOfMonth, endOfMonth, subMonths, eachMonthOfInterval, differenceInDays, eachWeekOfInterval, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-const CustomBarLabel = (props) => {
+const CustomGrowthLabel = (props) => {
     const { x, y, width, value, payload, dataKey } = props;
     if (!payload) return null;
-    if (!payload) return null;
     const growth = dataKey === 'Ingresos' ? (payload.growthIngresos ?? null) : (payload.growthGastos ?? null);
-    const color = dataKey === 'Ingresos' ? '#3b82f6' : '#ef4444';
+
+    if (growth === undefined || growth === null) return null;
 
     return (
-        <g>
-            {growth !== undefined && growth !== null && (
-                <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={12} fontWeight="bold">
-                    {growth > 0 ? '↑' : growth < 0 ? '↓' : ''} {Math.abs(growth)}%
-                </text>
-            )}
-            <text x={x + width / 2} y={y - 5} fill={color} textAnchor="middle" fontSize={12} fontWeight="bold">
-                {value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value}
-            </text>
-        </g>
+        <text x={x + width / 2} y={y - 20} fill={growth >= 0 ? '#16a34a' : '#dc2626'} textAnchor="middle" fontSize={12} fontWeight="bold">
+            {growth > 0 ? '↑' : growth < 0 ? '↓' : ''} {Math.abs(growth)}%
+        </text>
     );
 };
 
@@ -975,10 +968,12 @@ const Comparisons = () => { // Updated
                                 <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
                                 <Legend />
                                 <Bar dataKey="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Ingresos" content={<CustomBarLabel />} />
+                                    <LabelList dataKey="Ingresos" position="top" style={{ fill: '#22c55e', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Ingresos" content={<CustomGrowthLabel />} />
                                 </Bar>
                                 <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
-                                    <LabelList dataKey="Gastos" content={<CustomBarLabel />} />
+                                    <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    <LabelList dataKey="Gastos" content={<CustomGrowthLabel />} />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -1112,12 +1107,14 @@ const Comparisons = () => { // Updated
 
                                 {(annualMetric === 'all' || annualMetric === 'total_income') && (
                                     <Bar dataKey="Ingresos" fill="#3b82f6" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="Ingresos" content={<CustomBarLabel />} />
+                                        <LabelList dataKey="Ingresos" position="top" style={{ fill: '#3b82f6', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="Ingresos" content={<CustomGrowthLabel />} />
                                     </Bar>
                                 )}
                                 {(annualMetric === 'all' || annualMetric === 'total_expense') && (
                                     <Bar dataKey="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]}>
-                                        <LabelList dataKey="Gastos" content={<CustomBarLabel />} />
+                                        <LabelList dataKey="Gastos" position="top" style={{ fill: '#ef4444', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                        <LabelList dataKey="Gastos" content={<CustomGrowthLabel />} />
                                     </Bar>
                                 )}
                                 {(annualMetric === 'net') && (
