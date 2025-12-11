@@ -1057,25 +1057,14 @@ const Comparisons = () => { // Updated
                                         let endStr;
                                         let divisor = 1;
 
-                                        // Find first transaction date in this year to calculate "active months" correctly
-                                        // This handles cases where user started mid-year
-                                        const yearTrans = transactions.filter(t => t.date.startsWith(year.toString()) && t.status === 'paid');
-                                        const firstTransDate = yearTrans.length > 0
-                                            ? yearTrans.reduce((min, t) => t.date < min ? t.date : min, '9999-99-99')
-                                            : `${year}-01-01`;
-
-                                        const firstTransMonth = parseInt(firstTransDate.substring(5, 7)) - 1; // 0-indexed
-
                                         if (annualMode === 'ytd') {
                                             endStr = format(new Date(year, currentMonth, currentDay), 'yyyy-MM-dd');
                                         } else if (annualMode === 'average') {
                                             endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
                                             if (year === currentYear) {
-                                                // From first transaction month until current month
-                                                divisor = Math.max(1, (currentMonth - firstTransMonth) + 1);
+                                                divisor = Math.max(1, currentMonth + 1);
                                             } else {
-                                                // From first transaction month until Dec
-                                                divisor = Math.max(1, 12 - firstTransMonth);
+                                                divisor = 12;
                                             }
                                         } else {
                                             endStr = format(new Date(year, 11, 31), 'yyyy-MM-dd');
@@ -1090,6 +1079,7 @@ const Comparisons = () => { // Updated
 
                                         const income = incomeTotal / divisor;
                                         const expense = expenseTotal / divisor;
+                                        const net = income - expense;
 
                                         // Previous Year Logic for Growth
                                         const prevYear = year - 1;
@@ -1097,18 +1087,11 @@ const Comparisons = () => { // Updated
                                         let prevEndStr;
                                         let prevDivisor = 1;
 
-                                        // Find first transaction for previous year too
-                                        const prevYearTrans = transactions.filter(t => t.date.startsWith(prevYear.toString()) && t.status === 'paid');
-                                        const prevFirstTransDate = prevYearTrans.length > 0
-                                            ? prevYearTrans.reduce((min, t) => t.date < min ? t.date : min, '9999-99-99')
-                                            : `${prevYear}-01-01`;
-                                        const prevFirstTransMonth = parseInt(prevFirstTransDate.substring(5, 7)) - 1;
-
                                         if (annualMode === 'ytd') {
                                             prevEndStr = format(new Date(prevYear, currentMonth, currentDay), 'yyyy-MM-dd');
                                         } else if (annualMode === 'average') {
                                             prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
-                                            prevDivisor = Math.max(1, 12 - prevFirstTransMonth);
+                                            prevDivisor = 12;
                                         } else {
                                             prevEndStr = format(new Date(prevYear, 11, 31), 'yyyy-MM-dd');
                                         }
@@ -1132,7 +1115,7 @@ const Comparisons = () => { // Updated
                                             year: year.toString(),
                                             Ingresos: Number(income.toFixed(2)),
                                             Gastos: Number(expense.toFixed(2)),
-                                            Neto: Number((income - expense).toFixed(2)),
+                                            Neto: Number(net.toFixed(2)),
                                             growthIngresos: calculateGrowth(income, prevIncome),
                                             growthGastos: calculateGrowth(expense, prevExpense)
                                         };
@@ -1158,7 +1141,13 @@ const Comparisons = () => { // Updated
                                         <LabelList dataKey="Gastos" content={<CustomGrowthLabel />} />
                                     </Bar>
                                 )}
-                                {(annualMetric === 'net') && (
+                                {/* Always show Net Profit as a Line in 'all' mode, or as a Bar in 'net' mode */}
+                                {annualMetric === 'all' && (
+                                    <Line type="monotone" dataKey="Neto" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }}>
+                                        <LabelList dataKey="Neto" position="top" offset={10} style={{ fill: '#10b981', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                    </Line>
+                                )}
+                                {annualMetric === 'net_income' && (
                                     <Bar dataKey="Neto" fill="#10b981" radius={[4, 4, 0, 0]}>
                                         <LabelList dataKey="Neto" position="top" style={{ fill: '#10b981', fontSize: '12px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
                                     </Bar>
