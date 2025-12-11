@@ -802,8 +802,14 @@ const Comparisons = () => { // Updated
                                 let value = 0;
                                 let remainder = 0;
                                 let total = 0;
+                                let incomeVal = 0;
+                                let expenseVal = 0;
 
-                                if (chart.useCategory && chart.specificCategory) {
+                                if (chart.metric === 'income_expense') {
+                                    // Dual Metric Mode
+                                    incomeVal = periodTrans.filter(t => t.type === 'income').reduce((acc, curr) => acc + curr.amount, 0);
+                                    expenseVal = periodTrans.filter(t => t.type === 'expense').reduce((acc, curr) => acc + curr.amount, 0);
+                                } else if (chart.useCategory && chart.specificCategory) {
                                     // Specific Category Filtering (Stacked Mode)
                                     const isIncome = chart.metric === 'income';
                                     const isExpense = chart.metric === 'expense';
@@ -837,14 +843,16 @@ const Comparisons = () => { // Updated
                                     name: monthName,
                                     value: Number(value.toFixed(2)),
                                     remainder: Number(remainder.toFixed(2)),
-                                    total: Number((value + remainder).toFixed(2))
+                                    total: Number((value + remainder).toFixed(2)),
+                                    income: Number(incomeVal.toFixed(2)),
+                                    expense: Number(expenseVal.toFixed(2))
                                 };
                             });
                         }, [chart, transactions]);
 
                         const metricLabel = chart.useCategory && chart.specificCategory
                             ? chart.specificCategory
-                            : chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : 'Beneficio';
+                            : chart.metric === 'income' ? 'Ingresos' : chart.metric === 'expense' ? 'Gastos' : chart.metric === 'income_expense' ? 'Comparativa' : 'Beneficio';
 
                         const metricColor = chart.metric === 'income' ? '#22c55e' : chart.metric === 'expense' ? '#ef4444' : '#3b82f6';
                         const remainderColor = chart.metric === 'income' ? '#bbf7d0' : chart.metric === 'expense' ? '#fecaca' : '#bfdbfe'; // Light versions
@@ -868,7 +876,7 @@ const Comparisons = () => { // Updated
                                                 value={chart.metric}
                                                 onChange={(e) => {
                                                     updateFlexibleChart(chart.id, 'metric', e.target.value);
-                                                    if (e.target.value === 'profit') {
+                                                    if (e.target.value === 'profit' || e.target.value === 'income_expense') {
                                                         updateFlexibleChart(chart.id, 'useCategory', false);
                                                     }
                                                 }}
@@ -876,10 +884,11 @@ const Comparisons = () => { // Updated
                                             >
                                                 <option value="income">Ingresos</option>
                                                 <option value="expense">Gastos</option>
+                                                <option value="income_expense">Ingresos vs Gastos</option>
                                                 <option value="profit">Beneficio</option>
                                             </select>
 
-                                            {chart.metric !== 'profit' && (
+                                            {chart.metric !== 'profit' && chart.metric !== 'income_expense' && (
                                                 <label className="flex items-center gap-1 px-2 border-l border-gray-200 cursor-pointer">
                                                     <input
                                                         type="checkbox"
@@ -900,7 +909,7 @@ const Comparisons = () => { // Updated
                                             )}
                                         </div>
 
-                                        {chart.useCategory && chart.metric !== 'profit' && (
+                                        {chart.useCategory && chart.metric !== 'profit' && chart.metric !== 'income_expense' && (
                                             <select
                                                 value={chart.specificCategory || ''}
                                                 onChange={(e) => updateFlexibleChart(chart.id, 'specificCategory', e.target.value)}
@@ -929,8 +938,17 @@ const Comparisons = () => { // Updated
                                             <YAxis axisLine={false} tickLine={false} />
                                             <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '8px' }} />
 
-                                            {/* Stacked Bars Logic */}
-                                            {chart.useCategory ? (
+                                            {/* Render Logic */}
+                                            {chart.metric === 'income_expense' ? (
+                                                <>
+                                                    <Bar dataKey="income" name="Ingresos" fill="#22c55e" radius={[4, 4, 0, 0]} barSize={20}>
+                                                        <LabelList dataKey="income" position="top" style={{ fill: '#22c55e', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                    </Bar>
+                                                    <Bar dataKey="expense" name="Gastos" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20}>
+                                                        <LabelList dataKey="expense" position="top" style={{ fill: '#ef4444', fontSize: '9px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
+                                                    </Bar>
+                                                </>
+                                            ) : chart.useCategory ? (
                                                 <>
                                                     <Bar dataKey="value" name={metricLabel} stackId="a" fill={metricColor} radius={[0, 0, 4, 4]} barSize={40}>
                                                         <LabelList dataKey="value" position="center" style={{ fill: '#fff', fontSize: '10px', fontWeight: 'bold' }} formatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value} />
